@@ -40,20 +40,22 @@
 
         .controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 40px;
             width: 100%;
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 30px;
+            z-index: 10;
         }
 
         button {
-            background: white;
-            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid gold;
+            color: black;
             padding: 18px 22px;
             border-radius: 50%;
-            font-size: 20px;
-            box-shadow: 0 0 10px #fff;
+            font-size: 26px;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
             cursor: pointer;
         }
     </style>
@@ -83,9 +85,12 @@
         // Abrir cámara trasera
         navigator.mediaDevices.getUserMedia({
             video: { facingMode: { exact: "environment" } },
-            audio: true
-        }).then(stream => {
+            audio: false
+        }).then(async stream => {
             video.srcObject = stream;
+
+            let torchEnabled = await enableTorch(stream);
+            console.log("Flash:", torchEnabled ? "OK" : "No disponible");
         }).catch(err => {
             navigator.mediaDevices.getUserMedia({
                 video: true,
@@ -93,12 +98,20 @@
             }).then(stream => video.srcObject = stream);
         });
 
-        // Flash simulado
-        function activateFlash() {
-            flash.style.opacity = "1";
-            setTimeout(() => flash.style.opacity = "0", 150);
-        }
+        async function enableTorch(stream) {
+            const track = stream.getVideoTracks()[0];
+            const capabilities = track.getCapabilities();
 
+            if (capabilities.torch) {
+                try {
+                    await track.applyConstraints({ advanced: [{ torch: true }] });
+                    return true;
+                } catch (e) {
+                    console.log("Torch no disponible:", e);
+                }
+            }
+            return false;
+        }
         // Tomar foto PNG
         document.getElementById("btnPhoto").onclick = async () => {
             activateFlash();
