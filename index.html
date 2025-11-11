@@ -2,33 +2,60 @@
 <html>
 
 <head>
-    <title>Fotocabina Boda</title>
+    <title>Boda Brayam & Yazmin - Fotocabina</title>
     <style>
         body {
-            font-family: sans-serif;
+            font-family: "Georgia", serif;
             text-align: center;
+            background: linear-gradient(135deg, #fff8f0, #ffe9df);
+            padding: 20px;
+            color: #5a3e36;
+        }
+
+        h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
         }
 
         video,
         canvas {
             width: 90%;
-            max-width: 400px;
-            border-radius: 12px;
+            max-width: 420px;
+            border-radius: 20px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            border: 3px solid #dec1a3;
         }
 
-        button {
-            padding: 12px 20px;
+        #btn {
+            background-color: #d4a373;
+            color: white;
+            border: none;
+            padding: 16px 25px;
+            font-size: 18px;
+            border-radius: 12px;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #btn:hover {
+            background-color: #b8865e;
+        }
+
+        #msg {
             margin-top: 15px;
             font-size: 18px;
+            font-style: italic;
         }
     </style>
 </head>
 
 <body>
 
-    <h2>📸 Fotocabina - Boda</h2>
+    <h2>📸 Fotocabina</h2>
+    <h3>Boda Brayam & Yazmin</h3>
 
-    <video id="video" autoplay></video>
+    <video id="video" autoplay playsinline></video>
     <canvas id="canvas" style="display:none;"></canvas>
 
     <button id="btn">Tomar Foto</button>
@@ -41,31 +68,71 @@
         const btn = document.getElementById("btn");
         const msg = document.getElementById("msg");
 
-        // Abrir cámara
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => video.srcObject = stream)
-            .catch(err => alert("Error abriendo cámara: " + err));
+        // ✅ Activar cámara trasera
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } }
+        })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => alert("No se pudo abrir la cámara: " + err));
 
         btn.onclick = async () => {
+            msg.textContent = "📤 Guardando foto...";
+
             const ctx = canvas.getContext("2d");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0);
 
-            // Convertir a Base64
-            const dataURL = canvas.toDataURL("image/jpeg").replace(/^data:image\/jpeg;base64,/, "");
+            // ✅ Dimensiones verticales tipo Instagram 9:16
+            const WIDTH = 1080;
+            const HEIGHT = 1920;
 
-            msg.textContent = "Guardando...";
+            canvas.width = WIDTH;
+            canvas.height = HEIGHT;
 
-            // Enviar al backend
-            const res = await fetch("https://script.google.com/macros/s/AKfycby7wciONZJkfZym_zE2ymV3QNxilIOAvCFwc3y8WZjf1PdMxmIpqlFY8y3Fa2uo3P24/exec", {
-                method: "POST",
-                body: dataURL
-            });
+            // ✅ Dimensiones reales del video
+            const vw = video.videoWidth;
+            const vh = video.videoHeight;
 
-            msg.textContent = res.ok ? "✅ Foto guardada" : "❌ Error guardando";
+            // ✅ Ajuste para que la foto siempre quede vertical
+            const videoRatio = vw / vh;
+            const canvasRatio = WIDTH / HEIGHT;
+
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            if (videoRatio > canvasRatio) {
+                // El video es más ancho → recortamos lados
+                drawHeight = HEIGHT;
+                drawWidth = HEIGHT * videoRatio;
+                offsetX = -(drawWidth - WIDTH) / 2;
+                offsetY = 0;
+            } else {
+                // El video es más alto → recortamos arriba/abajo
+                drawWidth = WIDTH;
+                drawHeight = WIDTH / videoRatio;
+                offsetX = 0;
+                offsetY = -(drawHeight - HEIGHT) / 2;
+            }
+
+            // ✅ Dibujar la imagen centrada en vertical
+            ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
+
+            // ✅ Convertir en Base64 JPG
+            let data = canvas.toDataURL("image/jpeg", 0.9)
+                .replace(/^data:image\/jpeg;base64,/, "");
+
+            try {
+                const res = await fetch("https://script.google.com/macros/s/AKfycby7wciONZJkfZym_zE2ymV3QNxilIOAvCFwc3y8WZjf1PdMxmIpqlFY8y3Fa2uo3P24/exec", {
+                    method: "POST",
+                    body: data
+                });
+
+                msg.textContent = res.ok ? "✅ Foto guardada en Drive" : "❌ Error guardando";
+            } catch (e) {
+                msg.textContent = "⚠️ Error o tardanza en servidor";
+            }
         };
     </script>
+
 
 </body>
 
