@@ -1,182 +1,507 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photobook - Boda</title>
-
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Nuestra Boda — Cámara</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Montserrat:wght@500;700&display=swap"
+        rel="stylesheet">
     <style>
+        :root {
+            --bg1: #0e0e10;
+            --bg2: #1b1b1f;
+            --gold: #d4af37;
+            --gold-2: #f6e27a;
+            --accent: #ff7f7f;
+            --ok: #46d46b;
+            --warn: #ffb84d;
+            --btn-bg: rgba(0, 0, 0, 0.55);
+            --btn-fg: #fff;
+        }
+
+        html,
         body {
             margin: 0;
-            background: black;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
+            height: 100%;
+            background: linear-gradient(160deg, var(--bg1), var(--bg2));
+            color: #fff;
+            font-family: Montserrat, system-ui, -apple-system;
         }
 
-        #container {
+        .wrap {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column
+        }
+
+        header {
+            position: absolute;
+            top: env(safe-area-inset-top, 16px);
+            left: 0;
+            right: 0;
+            z-index: 3;
+            text-align: center;
+            padding: 8px 16px;
+            pointer-events: none
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 22px;
+            letter-spacing: 1px;
+            font-family: Cinzel, serif;
+            background: linear-gradient(45deg, var(--gold), var(--gold-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 18px rgba(212, 175, 55, 0.25)
+        }
+
+        .videoBox {
             position: relative;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden
         }
 
-        video,
-        canvas {
+        video {
             position: absolute;
             width: 100%;
             height: 100%;
             object-fit: cover;
+            inset: 0;
+            background: #000
         }
 
-        #flash {
+        /* marco vertical 9:16 para que “se vea Instagram” */
+        .frame {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            background: white;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
+            inset: 0;
+            margin: auto;
+            aspect-ratio: 9/16;
+            width: min(100vw, 56.25vh);
+            max-height: 100vh;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 22px;
+            box-shadow: 0 0 0 999vmax rgba(0, 0, 0, 0.25) inset
         }
 
         .controls {
             position: absolute;
-            bottom: 40px;
-            width: 100%;
+            bottom: env(safe-area-inset-bottom, 16px);
+            left: 0;
+            right: 0;
             display: flex;
+            gap: 16px;
             justify-content: center;
-            gap: 30px;
-            z-index: 10;
+            align-items: center;
+            z-index: 3
         }
 
-        button {
-            background: rgba(255, 255, 255, 0.9);
-            border: 3px solid gold;
-            color: black;
-            padding: 18px 22px;
+        .btn {
+            appearance: none;
+            border: none;
+            background: var(--btn-bg);
+            color: var(--btn-fg);
+            border-radius: 999px;
+            padding: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            backdrop-filter: blur(6px)
+        }
+
+        .btn:active {
+            transform: scale(0.98)
+        }
+
+        .btn--round {
+            width: 78px;
+            height: 78px
+        }
+
+        .btn--gold {
+            background: linear-gradient(180deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.15))
+        }
+
+        .btn--ok {
+            background: linear-gradient(180deg, rgba(70, 212, 107, 0.35), rgba(70, 212, 107, 0.2))
+        }
+
+        .btn--warn {
+            background: linear-gradient(180deg, rgba(255, 184, 77, 0.35), rgba(255, 184, 77, 0.2))
+        }
+
+        .btn span {
+            font-size: 12px;
+            margin-left: 8px;
+            font-weight: 700;
+            letter-spacing: .3px
+        }
+
+        .row {
+            display: flex;
+            gap: 12px
+        }
+
+        .toast {
+            position: absolute;
+            top: calc(env(safe-area-inset-top, 16px) + 42px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.65);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            transition: .25s;
+            z-index: 5;
+            max-width: 86vw;
+            text-align: center
+        }
+
+        .toast--show {
+            opacity: 1
+        }
+
+        .status {
+            position: absolute;
+            right: 12px;
+            top: calc(env(safe-area-inset-top, 16px) + 52px);
+            font-size: 12px;
+            opacity: .85;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 10px;
+            border-radius: 999px
+        }
+
+        .loader {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 4
+        }
+
+        .loader.show {
+            display: flex
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            font-size: 26px;
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
-            cursor: pointer;
+            background: var(--gold);
+            margin: 0 6px;
+            animation: b 1s infinite
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: .15s
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: .3s
+        }
+
+        @keyframes b {
+
+            0%,
+            60%,
+            100% {
+                transform: scale(1);
+                opacity: .5
+            }
+
+            30% {
+                transform: scale(1.4);
+                opacity: 1
+            }
+        }
+
+        footer {
+            position: absolute;
+            bottom: 6px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11px;
+            opacity: .6
         }
     </style>
 </head>
 
 <body>
+    <div class="wrap">
+        <header>
+            <h1>Andrey 💖 Yazmin • 22 Nov</h1>
+        </header>
 
-    <div id="container">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="canvas" style="display:none;"></canvas>
-        <div id="flash"></div>
+        <div class="videoBox">
+            <video id="preview" playsinline autoplay muted></video>
+            <div class="frame" aria-hidden="true"></div>
 
-        <div class="controls">
-            <button id="btnPhoto">📸</button>
-            <button id="btnVideo">🎥</button>
-            <button id="btnStop" style="display:none;">⏹️</button>
+            <div class="loader" id="loader" aria-live="polite">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+
+            <div class="toast" id="toast">Listo</div>
+            <div class="status" id="status">Cámara: iniciando…</div>
+
+            <div class="controls">
+                <button class="btn btn--warn" id="flashBtn" title="Flash" aria-pressed="false">
+                    <!-- icono flash -->
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M7 2v11h3v9l7-14h-4l4-6z" />
+                    </svg>
+                    <span>Flash</span>
+                </button>
+
+                <div class="row">
+                    <button class="btn btn--gold btn--round" id="photoBtn" title="Foto">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="13" r="4" />
+                            <path
+                                d="M5 7h2l2-2h6l2 2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
+                        </svg>
+                    </button>
+
+                    <button class="btn btn--ok btn--round" id="recBtn" title="Grabar video">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="12" r="8" />
+                        </svg>
+                    </button>
+
+                    <button class="btn btn--warn btn--round" id="stopBtn" title="Detener" style="display:none">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="6" width="12" height="12" rx="2" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
+
+        <footer>Hecho con 💖 para nuestra boda</footer>
     </div>
 
     <script>
-        let video = document.getElementById("video");
-        let canvas = document.getElementById("canvas");
-        let flash = document.getElementById("flash");
-        let recorder;
-        let chunks = [];
+        // Pega aquí la URL de tu Apps Script
+        const UPLOAD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxyU3U31Y6G34Q1a0IuDCShWp55uAgRX0WmecJUu5AUFpm74hst1Sx54kFpveCF7y6UDw/exec';
 
-        // Abrir cámara trasera
-        navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { exact: "environment" } },
-            audio: false
-        }).then(async stream => {
-            video.srcObject = stream;
+        const video = document.getElementById('preview');
+        const statusEl = document.getElementById('status');
+        const toast = document.getElementById('toast');
+        const loader = document.getElementById('loader');
+        const photoBtn = document.getElementById('photoBtn');
+        const recBtn = document.getElementById('recBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const flashBtn = document.getElementById('flashBtn');
 
-            let torchEnabled = await enableTorch(stream);
-            console.log("Flash:", torchEnabled ? "OK" : "No disponible");
-        }).catch(err => {
-            navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            }).then(stream => video.srcObject = stream);
-        });
+        let stream, mediaRecorder, chunks = [];
+        let torchSupported = false, torchOn = false;
+        let mimeChosen = '';
 
-        async function enableTorch(stream) {
-            const track = stream.getVideoTracks()[0];
-            const capabilities = track.getCapabilities();
-
-            if (capabilities.torch) {
-                try {
-                    await track.applyConstraints({ advanced: [{ torch: true }] });
-                    return true;
-                } catch (e) {
-                    console.log("Torch no disponible:", e);
-                }
-            }
-            return false;
+        function showToast(msg, ok = false) {
+            toast.textContent = msg;
+            toast.style.borderColor = ok ? 'rgba(70,212,107,0.5)' : 'rgba(255,184,77,0.4)';
+            toast.classList.add('toast--show');
+            setTimeout(() => toast.classList.remove('toast--show'), 1800);
         }
-        // Tomar foto PNG
-        document.getElementById("btnPhoto").onclick = async () => {
-            activateFlash();
+        function setLoading(isLoading) {
+            loader.classList.toggle('show', isLoading);
+        }
+        function setStatus(msg) { statusEl.textContent = msg; }
 
-            let w = video.videoWidth;
-            let h = video.videoHeight;
+        async function initCamera() {
+            try {
+                // Cámara trasera, vertical 9:16, sin audio
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { exact: 'environment' },
+                        aspectRatio: 9 / 16,
+                        width: { ideal: 1080 },
+                        height: { ideal: 1920 },
+                        focusMode: 'continuous'
+                    },
+                    audio: false
+                });
+            } catch (e) {
+                // Fallback sin exact si falla
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        aspectRatio: 9 / 16,
+                        width: { ideal: 1080 },
+                        height: { ideal: 1920 }
+                    },
+                    audio: false
+                });
+            }
 
-            canvas.width = w;
-            canvas.height = h;
+            video.srcObject = stream;
+            video.muted = true;
+            video.playsInline = true;
 
-            let ctx = canvas.getContext("2d");
-            ctx.drawImage(video, 0, 0, w, h);
+            // Torch / flash si el hardware lo permite (Chrome Android)
+            const [track] = stream.getVideoTracks();
+            const caps = track.getCapabilities ? track.getCapabilities() : {};
+            torchSupported = !!caps.torch;
+            flashBtn.style.opacity = torchSupported ? '1' : '.35';
+            flashBtn.title = torchSupported ? 'Flash' : 'Flash no soportado';
+            setStatus(`Cámara lista ${torchSupported ? '• flash OK' : ''}`);
 
-            let dataURL = canvas.toDataURL("image/png"); // PNG
+            // Elegir MIME para MediaRecorder intentando MP4 primero
+            if (window.MediaRecorder) {
+                const candidates = [
+                    'video/mp4;codecs=h264',
+                    'video/mp4',
+                    'video/webm;codecs=h264',
+                    'video/webm;codecs=vp9',
+                    'video/webm;codecs=vp8',
+                    'video/webm'
+                ];
+                mimeChosen = candidates.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+            }
+        }
 
-            // enviar al backend
-            await fetch("https://script.google.com/macros/s/AKfycbyzdi5N7zNiMr8q0uSpCyLTbVZMER4owMSKZbY30-KM-oE0Z-emr6ioVYFzSKS09iyv/exec", {
-                method: "POST",
-                body: dataURL.replace("data:image/png;base64,", "")
-            });
+        async function toggleTorch() {
+            if (!torchSupported || !stream) return;
+            try {
+                const [track] = stream.getVideoTracks();
+                torchOn = !torchOn;
+                await track.applyConstraints({ advanced: [{ torch: torchOn }] });
+                flashBtn.setAttribute('aria-pressed', torchOn ? 'true' : 'false');
+                showToast(torchOn ? 'Flash encendido' : 'Flash apagado', true);
+            } catch (e) {
+                showToast('No se pudo activar el flash');
+            }
+        }
 
-            alert("Foto PNG subida a Drive");
-        };
+        function drawCoverToCanvas(canvas, video) {
+            // Canvas vertical 1080x1920
+            const W = 1080, H = 1920;
+            canvas.width = W; canvas.height = H;
+            const ctx = canvas.getContext('2d');
+            const vw = video.videoWidth, vh = video.videoHeight;
+            if (!vw || !vh) {
+                // si aún no está listo el video, reintenta
+                return false;
+            }
+            // Calcular escala para “cover”
+            const scale = Math.max(W / vw, H / vh);
+            const sw = vw * scale, sh = vh * scale;
+            const dx = (W - sw) / 2;
+            const dy = (H - sh) / 2;
+            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+            ctx.drawImage(video, dx, dy, sw, sh);
+            // Borde suave opcional
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(4, 4, W - 8, H - 8);
+            return true;
+        }
 
-        // Grabar video (webm → opcionalmente convertir a mp4)
-        document.getElementById("btnVideo").onclick = () => {
-            chunks = [];
-            let stream = video.srcObject;
+        async function takePhoto() {
+            try {
+                setLoading(true);
+                setStatus('Tomando foto…');
+                const canvas = document.createElement('canvas');
+                if (!drawCoverToCanvas(canvas, video)) {
+                    await new Promise(r => setTimeout(r, 120));
+                    drawCoverToCanvas(canvas, video);
+                }
+                const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1.0));
+                const fileName = `boda_foto_${Date.now()}.png`;
+                const ok = await uploadFile(blob, fileName, 'photo');
+                setLoading(false);
+                setStatus('Cámara lista');
+                showToast(ok ? '✅ Foto guardada en Drive' : 'No se pudo subir la foto', ok);
+            } catch (e) {
+                setLoading(false);
+                setStatus('Error al tomar foto');
+                showToast('Error al tomar o subir la foto');
+            }
+        }
 
-            recorder = new MediaRecorder(stream, {
-                mimeType: "video/webm"
-            });
-
-            recorder.ondataavailable = e => chunks.push(e.data);
-
-            recorder.onstop = async () => {
-                let blob = new Blob(chunks, { type: "video/webm" });
-
-                let reader = new FileReader();
-                reader.onloadend = async () => {
-                    let base64 = reader.result.split(",")[1];
-
-                    await fetch("https://script.google.com/macros/s/AKfycbzepAoe966JPGbmP6xKMgqjsCOu6bw9FtwiPPzpa1gfAX7VdAiQel6WGGGp4Ssvd1xGgQ/exec", {
-                        method: "POST",
-                        body: base64
-                    });
-
-                    alert("🎥 Video subido a Drive");
+        async function startRecording() {
+            if (!stream) { showToast('Cámara no lista'); return; }
+            try {
+                chunks = [];
+                const opts = mimeChosen ? { mimeType: mimeChosen } : undefined;
+                mediaRecorder = new MediaRecorder(stream, opts);
+                mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+                mediaRecorder.onstart = () => {
+                    setStatus(`Grabando… ${mimeChosen || ''}`);
+                    recBtn.style.display = 'none'; stopBtn.style.display = 'inline-flex';
                 };
-                reader.readAsDataURL(blob);
-            };
+                mediaRecorder.onstop = async () => {
+                    setLoading(true);
+                    const blob = new Blob(chunks, { type: mimeChosen || 'video/webm' });
+                    const ext = (blob.type.includes('mp4')) ? 'mp4' : 'webm';
+                    const fileName = `boda_video_${Date.now()}.${ext}`;
+                    const ok = await uploadFile(blob, fileName, 'video');
+                    setLoading(false);
+                    setStatus('Cámara lista');
+                    showToast(ok ? `✅ Video guardado (${ext.toUpperCase()})` : 'No se pudo subir el video', ok);
+                    recBtn.style.display = 'inline-flex'; stopBtn.style.display = 'none';
+                };
+                // límite de seguridad 30s
+                mediaRecorder.start(1000);
+                setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording(); }, 30_000);
+            } catch (e) {
+                showToast('No se pudo iniciar la grabación');
+            }
+        }
+        function stopRecording() {
+            try {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            } catch { }
+        }
 
-            recorder.start();
-            document.getElementById("btnStop").style.display = "inline-block";
-            document.getElementById("btnVideo").style.display = "none";
-        };
+        async function uploadFile(blob, filename, kind) {
+            try {
+                const fd = new FormData();
+                fd.append('type', kind);
+                fd.append('file', blob, filename);
+                const res = await fetch(UPLOAD_ENDPOINT, { method: 'POST', body: fd });
+                // Apps Script suele permitir CORS sin headers; si el navegador hace opaque,
+                // damos por buena si status 200-299 o no hay excepción.
+                if (!res || (res.status && (res.status < 200 || res.status >= 300))) return false;
+                // Intentar leer JSON si es posible
+                try {
+                    const data = await res.json();
+                    return !!(data && data.ok);
+                } catch {
+                    return true; // respuesta opaca/ok
+                }
+            } catch (e) {
+                return false;
+            }
+        }
 
-        // Detener video
-        document.getElementById("btnStop").onclick = () => {
-            recorder.stop();
-            document.getElementById("btnStop").style.display = "none";
-            document.getElementById("btnVideo").style.display = "inline-block";
-        };
+        // eventos
+        flashBtn.addEventListener('click', toggleTorch);
+        photoBtn.addEventListener('click', takePhoto);
+        recBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+
+        // inicio
+        (async () => { await initCamera(); })();
     </script>
-
 </body>
 
 </html>
