@@ -298,7 +298,7 @@
 
     <script>
         // Pega aquí la URL de tu Apps Script
-        const UPLOAD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxyU3U31Y6G34Q1a0IuDCShWp55uAgRX0WmecJUu5AUFpm74hst1Sx54kFpveCF7y6UDw/exec';
+        const UPLOAD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbw7VsNoTgS85YUEHwtDPJTFS3LKsGF_3sd9Kv3TiWAmHJDhm8qzt7ZPBviTJJfms0B38Q/exec';
 
         const video = document.getElementById('preview');
         const statusEl = document.getElementById('status');
@@ -472,23 +472,84 @@
             } catch { }
         }
 
+        async function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const dataUrl = reader.result; // "data:...;base64,XXXX"
+                    const base64 = String(dataUrl).split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = (err) => reject(err);
+                reader.readAsDataURL(blob);
+            });
+        }
+
         async function uploadFile(blob, filename, kind) {
             try {
-                const fd = new FormData();
-                fd.append('type', kind);
-                fd.append('file', blob, filename);
-                const res = await fetch(UPLOAD_ENDPOINT, { method: 'POST', body: fd });
-                // Apps Script suele permitir CORS sin headers; si el navegador hace opaque,
-                // damos por buena si status 200-299 o no hay excepción.
-                if (!res || (res.status && (res.status < 200 || res.status >= 300))) return false;
-                // Intentar leer JSON si es posible
+                // Limpiar nombre y mime
+                const mimeType = blob.type || (kind === 'photo' ? 'image/png' : 'video/mp4');
+
+                // Opcional: recortar/ajustar calidad si quieres reducir tamaño (solo fotos)
+                // -- aquí asumimos el blob es definitivo --
+
+                // Convertir a base64 (puede tardar para videos grandes)
+                setStatus('Convirtiendo archivo para subir…');
+                const base64 = await blobToBase64(blob);
+
+                const body = {
+                    type: kind,
+                    filename,
+                    mimeType,
+                    base64
+                };
+
+                // Timeout (60s). Ajusta si tu conexión es lenta
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 60_000);
+
+                setStatus('Subiendo archivo…');
+                const res = await fetch(UPLOAD_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    signal: controller.signal
+                });
+                clearTimeout(timeout);
+
+                if (!res) {
+                    console.error('Respuesta nula al subir');
+                    return false;
+                }
+
+                if (!res.ok) {
+                    // Intenta leer texto de error para debugging
+                    let txt = '';
+                    try { txt = await res.text(); } catch (_) { txt = '(no se pudo leer body)'; }
+                    console.error('Error uploading:', res.status, txt);
+                    return false;
+                }
+
+                // Intentar parsear JSON
                 try {
                     const data = await res.json();
-                    return !!(data && data.ok);
-                } catch {
-                    return true; // respuesta opaca/ok
+                    if (!data || !data.ok) {
+                        console.error('Respuesta del servidor no ok:', data);
+                        return false;
+                    }
+                    console.log('Subida OK:', data);
+                    return true;
+                } catch (err) {
+                    // Respuesta opaca pero status OK -> considerar success
+                    console.warn('No se pudo parsear JSON, pero status OK', err);
+                    return true;
                 }
-            } catch (e) {
+            } catch (err) {
+                console.error('Error en uploadFile:', err);
+                if (err.name === 'AbortError') {
+                    showToast('La subida tardó demasiado — intenta con videos más cortos o mejor conexión');
+                    setStatus('Timeout subida');
+                }
                 return false;
             }
         }
