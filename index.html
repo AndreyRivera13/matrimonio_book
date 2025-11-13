@@ -194,12 +194,6 @@
             /* ============================ */
             /*   CONFIGURA TU SCRIPT AQUÍ   */
             /* ============================ */
-
-            /* IMPORTANTE:
-               - No usamos headers personalizados
-               - No seteamos Content-Type
-               - No enviamos JSON: solo FormData
-            */
             const UPLOAD_URL = "https://script.google.com/macros/s/AKfycbzwFzFGi4yV5Q6-yAyy1dYR_nNbvpV7Y2SSTIy_MBRdcDmeo2KtPZKtS4r5VCzWvqfr/exec";
 
             /* ============================ */
@@ -239,11 +233,13 @@
             /* ============================ */
             (async function initCamera() {
                 try {
+                    // Solicitar MÁXIMA calidad de cámara
                     stream = await navigator.mediaDevices.getUserMedia({
                         video: {
                             facingMode: { ideal: "environment" },
-                            width: { ideal: 1080 },
-                            height: { ideal: 1920 }
+                            width: { ideal: 3840 },  // 4K
+                            height: { ideal: 2160 }, // 4K
+                            frameRate: { ideal: 30 }
                         },
                         audio: false
                     });
@@ -251,6 +247,10 @@
                     const track = stream.getVideoTracks()[0];
                     const caps = track.getCapabilities ? track.getCapabilities() : {};
                     torchOK = !!caps.torch;
+
+                    // Log de resolución real obtenida
+                    const settings = track.getSettings();
+                    console.log("📹 Resolución cámara:", settings.width + "x" + settings.height);
 
                     document.getElementById("preview").srcObject = stream;
 
@@ -288,7 +288,7 @@
             /* ============================ */
             const galleryInput = document.createElement("input");
             galleryInput.type = "file";
-            galleryInput.accept = "image/*"; // solo fotos, como pides
+            galleryInput.accept = "image/*";
             galleryInput.style.display = "none";
             document.body.appendChild(galleryInput);
 
@@ -306,16 +306,33 @@
             document.getElementById("photoBtn").onclick = async () => {
                 try {
                     const video = document.getElementById("preview");
-                    // Asegurar tamaño exacto 1080x1920
-                    const canvas = document.createElement("canvas");
-                    canvas.width = 1080; canvas.height = 1920;
-                    const ctx = canvas.getContext("2d");
-                    drawVideoCover(ctx, video, 1080, 1920);
 
+                    // Usar la resolución REAL del video para máxima calidad
+                    const videoWidth = video.videoWidth || 1920;
+                    const videoHeight = video.videoHeight || 1080;
+
+                    console.log("📸 Capturando foto:", videoWidth + "x" + videoHeight);
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = videoWidth;
+                    canvas.height = videoHeight;
+
+                    // Sin alpha para mejor compresión
+                    const ctx = canvas.getContext("2d", {
+                        alpha: false,
+                        desynchronized: true
+                    });
+
+                    // Dibujar sin interpolación para máxima nitidez
+                    ctx.imageSmoothingEnabled = false;
+                    drawVideoCover(ctx, video, videoWidth, videoHeight);
+
+                    // JPEG con 98% de calidad (casi imperceptible vs PNG pero 5x más pequeño)
                     canvas.toBlob(blob => {
                         if (!blob) { showToast("No se pudo crear la foto"); return; }
-                        uploadBlob(blob, `foto_${Date.now()}.png`);
-                    }, "image/png", 0.92);
+                        console.log("💾 Tamaño foto:", (blob.size / 1024 / 1024).toFixed(2) + " MB");
+                        uploadBlob(blob, `foto_${Date.now()}.jpg`);
+                    }, "image/jpeg", 0.98);
                 } catch (e) {
                     console.error(e);
                     showToast("Error al capturar foto");
@@ -328,21 +345,37 @@
             document.getElementById("recBtn").onclick = () => {
                 try {
                     chunks = [];
-                    // Elegimos el mejor mime soportado por el dispositivo
+
+                    // Intentar MÁXIMA calidad de video
                     const mimeCandidates = [
                         "video/webm;codecs=vp9",
-                        "video/webm;codecs=vp8",
+                        "video/webm;codecs=vp8,opus",
+                        "video/webm;codecs=h264",
                         "video/webm"
                     ];
-                    const mimeType = mimeCandidates.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
 
-                    mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-                    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+                    const mimeType = mimeCandidates.find(t =>
+                        MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)
+                    ) || "";
+
+                    console.log("🎥 Codec video:", mimeType);
+
+                    // Configurar para MÁXIMA calidad
+                    const options = {
+                        mimeType: mimeType || undefined,
+                        videoBitsPerSecond: 8000000  // 8 Mbps = alta calidad
+                    };
+
+                    mediaRecorder = new MediaRecorder(stream, options);
+
+                    mediaRecorder.ondataavailable = e => {
+                        if (e.data && e.data.size > 0) chunks.push(e.data);
+                    };
 
                     mediaRecorder.onstop = () => {
                         try {
-                            const type = (mimeType && mimeType.includes("webm")) ? "video/webm" : "video/webm";
-                            const blob = new Blob(chunks, { type });
+                            const blob = new Blob(chunks, { type: mimeType || "video/webm" });
+                            console.log("💾 Tamaño video:", (blob.size / 1024 / 1024).toFixed(2) + " MB");
                             uploadBlob(blob, `video_${Date.now()}.webm`);
                         } catch (err) {
                             console.error(err);
@@ -353,6 +386,7 @@
                     };
 
                     mediaRecorder.start();
+
                     // Límite máx 30s
                     recTimer = setTimeout(() => {
                         if (mediaRecorder && mediaRecorder.state === "recording") {
@@ -393,7 +427,6 @@
                     const base64Promise = new Promise((resolve, reject) => {
                         reader.onloadend = () => {
                             const result = reader.result;
-                            // Quitar el prefijo "data:image/png;base64," o similar
                             const base64 = result.split(',')[1];
                             resolve(base64);
                         };
