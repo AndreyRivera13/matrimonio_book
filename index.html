@@ -6,76 +6,35 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Nuestra Boda — Cámara</title>
 
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
-/* --- ESTILOS DE BODA --- */
-:root{
-  --bg1:#0e0e10; --bg2:#1b1b1f;
-  --gold:#d4af37; --gold2:#f6e27a;
-}
-html,body{
-  margin:0;height:100%;
-  background:linear-gradient(160deg,var(--bg1),var(--bg2));
-  color:#fff;font-family:Montserrat;
-}
+:root{--bg1:#0e0e10;--bg2:#1b1b1f;--gold:#d4af37;--gold2:#f6e27a;}
+html,body{margin:0;height:100%;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#fff;font-family:Montserrat}
 .wrap{position:fixed;inset:0;display:flex;flex-direction:column}
+
 header{text-align:center;padding:12px 0;font-family:Cinzel;font-size:22px}
-header span{
-  background:linear-gradient(45deg,var(--gold),var(--gold2));
-  -webkit-background-clip:text;color:transparent;
-}
+header span{background:linear-gradient(45deg,var(--gold),var(--gold2));-webkit-background-clip:text;color:transparent}
 
-.videoBox{
-  flex:1;position:relative;overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
-}
+.videoBox{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
-video{
-  position:absolute;inset:0;
-  width:100%;height:100%;object-fit:cover;
-}
+.frame{position:absolute;inset:0;margin:auto;aspect-ratio:9/16;width:min(100vw,56vh);
+border:2px solid rgba(255,255,255,.18);border-radius:22px;box-shadow:0 0 0 999vmax rgba(0,0,0,.25) inset}
 
-/* Marco tipo Instagram */
-.frame{
-  position:absolute;inset:0;margin:auto;
-  aspect-ratio:9/16;width:min(100vw,56vh);
-  border:2px solid rgba(255,255,255,0.18);
-  border-radius:22px;
-  box-shadow:0 0 0 999vmax rgba(0,0,0,0.25) inset;
-}
-
-/* Controles */
-.controls{
-  position:absolute;bottom:22px;left:0;right:0;
-  display:flex;flex-direction:column;gap:14px;
-  justify-content:center;align-items:center;
-}
+.controls{position:absolute;bottom:22px;left:0;right:0;display:flex;flex-direction:column;gap:14px;align-items:center}
 .row{display:flex;gap:16px}
 
-.btn{
-  border:none;border-radius:999px;
-  padding:16px;background:rgba(0,0,0,0.55);
-  color:#fff;backdrop-filter:blur(6px);
-  display:flex;align-items:center;justify-content:center;
-}
+.btn{border:none;border-radius:999px;padding:16px;background:rgba(0,0,0,.55);color:#fff;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center}
 .btn-round{width:78px;height:78px}
-.btn-gold{background:rgba(212,175,55,0.25)}
-.btn-green{background:rgba(70,212,107,0.28)}
-.btn-warn{background:rgba(255,184,77,0.28)}
+.btn-warn{background:rgba(255,184,77,.28)}
+.btn-gold{background:rgba(212,175,55,.28)}
+.btn-green{background:rgba(70,212,107,.28)}
 
-.toast{
-  position:absolute;top:70px;left:50%;transform:translateX(-50%);
-  background:rgba(0,0,0,0.6);padding:10px 14px;border-radius:12px;
-  opacity:0;transition:0.3s;
-}
+.toast{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:10px 14px;border-radius:12px;opacity:0;transition:.3s}
 .toast.show{opacity:1}
 
-.loader{
-  position:absolute;inset:0;background:rgba(0,0,0,0.35);
-  display:none;align-items:center;justify-content:center;
-}
+.loader{position:absolute;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center}
 .loader.show{display:flex}
 </style>
 </head>
@@ -83,9 +42,7 @@ video{
 <body>
 <div class="wrap">
 
-<header>
-  <span>Andrey 💖 Yazmin — 22 Nov</span>
-</header>
+<header><span>Andrey 💖 Yazmin — 22 Nov</span></header>
 
 <div class="videoBox">
   <video id="preview" autoplay playsinline muted></video>
@@ -95,6 +52,7 @@ video{
   <div class="toast" id="toast">Listo</div>
 
   <div class="controls">
+
     <div class="row">
       <button class="btn btn-warn" id="flashBtn">⚡</button>
       <button class="btn btn-warn" id="galleryBtn">📁</button>
@@ -106,169 +64,96 @@ video{
       <button class="btn btn-green btn-round" id="recBtn">🎥</button>
       <button class="btn btn-warn btn-round" id="stopBtn" style="display:none">⏹</button>
     </div>
+
   </div>
 </div>
 
+<!-- FORMULARIO OCULTO PARA EVITAR CORS -->
+<iframe name="uploadFrame" style="display:none;"></iframe>
+<form id="uploadForm" action="https://script.google.com/macros/s/AKfycbx00pCRx5FQ-rgQ5VklDxeh4Hy9bs7QgU7ZplPfq7qXHiRbvwHuDzgy2VUzugJat6Iq/exec"
+      method="post" enctype="multipart/form-data" target="uploadFrame" style="display:none">
+   <input type="file" id="realFile" name="file">
+   <input type="text" id="realName" name="filename">
+</form>
+
 <script>
-/* ============================ */
-/*   CONFIGURA TU SCRIPT AQUÍ   */
-/* ============================ */
-const UPLOAD_URL = "https://script.google.com/macros/s/AKfycbwq1J0Yw2ODrh3LGX0HOZyUWv2Ue-3yPEJx1CNm9UcMTTr2ROMtRvX5FOanc74zgEz0/exec";
+/* ============================= */
+const UPLOAD_FORM = document.getElementById("uploadForm");
+const REAL_FILE  = document.getElementById("realFile");
+const REAL_NAME  = document.getElementById("realName");
+/* ============================= */
 
-/* ============================ */
-/*  VARIABLES GLOBALES         */
-/* ============================ */
-let stream, mediaRecorder, chunks=[];
-let torch=false, torchOK=false;
+function showToast(t){const x=document.getElementById("toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),1500)}
+function setLoading(b){document.getElementById("loader").classList.toggle("show",b)}
 
-/* ============================ */
-/*      UTILIDADES UI          */
-/* ============================ */
-const toast=document.getElementById("toast");
-const loader=document.getElementById("loader");
+let stream,rec,chunks=[];
 
-function showToast(msg){
-  toast.textContent=msg;
-  toast.classList.add("show");
-  setTimeout(()=>toast.classList.remove("show"),1600);
-}
-function setLoading(b){ loader.classList.toggle("show",b); }
+/* INICIAR CÁMARA */
+(async()=>{
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
+  document.getElementById("preview").srcObject=stream;
 
-/* ============================ */
-/*      INICIAR CÁMARA         */
-/* ============================ */
-(async function initCamera(){
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:"environment",width:{ideal:1080},height:{ideal:1920}},
-      audio:false
-    });
-
-    const track = stream.getVideoTracks()[0];
-    const caps = track.getCapabilities();
-    torchOK = !!caps.torch;
-
-    document.getElementById("preview").srcObject = stream;
-
-  }catch(err){
-    showToast("No se pudo abrir la cámara");
-  }
+  const caps=stream.getVideoTracks()[0].getCapabilities();
+  window.torchOK=!!caps.torch;
 })();
 
-/* ============================ */
-/*       FLASH / TORCH          */
-/* ============================ */
-document.getElementById("flashBtn").onclick=async()=>{
-  if(!torchOK) return showToast("Flash no soportado");
+/* FLASH */
+flashBtn.onclick=async()=>{
+  if(!window.torchOK){showToast("No soporta flash");return}
   const track=stream.getVideoTracks()[0];
-  torch = !torch;
-  await track.applyConstraints({advanced:[{torch}]});
+  window.torch=!window.torch;
+  await track.applyConstraints({advanced:[{torch:window.torch}]});
 };
 
-/* ============================ */
-/*       FULLSCREEN             */
-/* ============================ */
-document.getElementById("fsBtn").onclick=()=>{
-  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
-  else document.exitFullscreen();
-};
+/* FULLSCREEN */
+fsBtn.onclick=()=>!document.fullscreenElement?document.documentElement.requestFullscreen():document.exitFullscreen();
 
-/* ============================ */
-/*       GALERÍA INPUT          */
-/* ============================ */
+/* GALERÍA INPUT */
 const galleryInput=document.createElement("input");
-galleryInput.type="file";
-galleryInput.accept="image/*";
-galleryInput.style.display="none";
+galleryInput.type="file";galleryInput.accept="image/*";galleryInput.style.display="none";
 document.body.appendChild(galleryInput);
+galleryBtn.onclick=()=>galleryInput.click();
+galleryInput.onchange=e=>{if(e.target.files[0]) uploadFile(e.target.files[0],e.target.files[0].name)};
 
-document.getElementById("galleryBtn").onclick=()=> galleryInput.click();
-
-galleryInput.onchange=async(e)=>{
-  if(!e.target.files.length) return;
-  const file=e.target.files[0];
-  uploadBlob(file,file.name);
+/* FOTO */
+photoBtn.onclick=()=>{
+  const v=document.getElementById("preview");
+  const c=document.createElement("canvas");
+  c.width=1080;c.height=1920;
+  c.getContext("2d").drawImage(v,0,0,1080,1920);
+  c.toBlob(b=>uploadFile(b,"foto_"+Date.now()+".png"),"image/png");
 };
 
-/* ============================ */
-/*       TOMAR FOTO             */
-/* ============================ */
-document.getElementById("photoBtn").onclick=async()=>{
-
-  const video=document.getElementById("preview");
-  const canvas=document.createElement("canvas");
-  canvas.width=1080; canvas.height=1920;
-  const ctx=canvas.getContext("2d");
-  ctx.drawImage(video,0,0,1080,1920);
-
-  canvas.toBlob(blob=>{
-    uploadBlob(blob,`foto_${Date.now()}.png`);
-  },"image/png");
-};
-
-/* ============================ */
-/*       GRABAR VIDEO           */
-/* ============================ */
-document.getElementById("recBtn").onclick=()=>{
-
-  chunks=[];
-  mediaRecorder=new MediaRecorder(stream,{mimeType:"video/webm"});
-  mediaRecorder.ondataavailable=e=>chunks.push(e.data);
-
-  mediaRecorder.onstop=()=>{
+/* VIDEO */
+recBtn.onclick=()=>{
+  chunks=[];rec=new MediaRecorder(stream,{mimeType:"video/webm"});
+  rec.ondataavailable=e=>chunks.push(e.data);
+  rec.onstop=()=>{
     const blob=new Blob(chunks,{type:"video/webm"});
-    uploadBlob(blob,`video_${Date.now()}.webm`);
+    uploadFile(blob,"video_"+Date.now()+".webm");
   };
-
-  mediaRecorder.start();
-  document.getElementById("recBtn").style.display="none";
-  document.getElementById("stopBtn").style.display="inline-flex";
+  rec.start();
+  recBtn.style.display="none";stopBtn.style.display="inline-flex";
 };
+stopBtn.onclick=()=>{rec.stop();recBtn.style.display="inline-flex";stopBtn.style.display="none"};
 
-document.getElementById("stopBtn").onclick=()=>{
-  mediaRecorder.stop();
-  document.getElementById("recBtn").style.display="inline-flex";
-  document.getElementById("stopBtn").style.display="none";
-};
-
-/* ============================ */
-/*         SUBIR ARCHIVO        */
-/* ============================ */
-async function uploadBlob(blob,filename){
+/* SUBIR ARCHIVO SIN CORS */
+function uploadFile(blob,name){
   setLoading(true);
 
-  const base64 = await blobToBase64(blob);
-  const body={
-    filename,
-    mimeType:blob.type,
-    base64
-  };
+  const file=new File([blob],name,{type:blob.type});
+  REAL_FILE.files = createFileList(file);
+  REAL_NAME.value = name;
 
-  try{
-    const res=await fetch(UPLOAD_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify(body)
-    });
+  UPLOAD_FORM.submit();
 
-    const json=await res.json();
-    setLoading(false);
-
-    if(json.ok) showToast("Guardado en Drive");
-    else showToast("Error al subir");
-    
-  }catch(err){
-    setLoading(false);
-    showToast("Fallo conexión");
-  }
+  setTimeout(()=>{setLoading(false);showToast("Guardado en Drive")},1200);
 }
 
-function blobToBase64(blob){
-  return new Promise(res=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result.split(",")[1]);
-    r.readAsDataURL(blob);
-  });
+function createFileList(file){
+  const dt=new DataTransfer();
+  dt.items.add(file);
+  return dt.files;
 }
 </script>
 
