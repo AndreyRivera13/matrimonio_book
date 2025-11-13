@@ -485,10 +485,10 @@
 
                     console.log("🎥 Codec video:", mimeType);
 
-                    // Configurar para MÁXIMA calidad
+                    // Configurar para buena calidad sin afectar rendimiento
                     const options = {
                         mimeType: mimeType || undefined,
-                        videoBitsPerSecond: 8000000  // 8 Mbps = alta calidad
+                        videoBitsPerSecond: 2500000  // 2.5 Mbps = buena calidad sin lag
                     };
 
                     mediaRecorder = new MediaRecorder(stream, options);
@@ -510,7 +510,8 @@
                         }
                     };
 
-                    mediaRecorder.start();
+                    // Capturar en chunks más pequeños para evitar lag
+                    mediaRecorder.start(1000); // Capturar cada 1 segundo
 
                     // Límite máx 30s
                     recTimer = setTimeout(() => {
