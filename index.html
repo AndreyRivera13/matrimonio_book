@@ -173,26 +173,26 @@ document.getElementById("stopBtn").onclick = ()=>{
   document.getElementById("stopBtn").style.display="none";
 };
 
-/* ============================ */
-/*   SUBIR SIN CORS (multipart) */
-/* ============================ */
-async function uploadFile(blob){
-  setLoading(true);
+/* =============================== */
+/* SUBIDA SIN CORS (FormData)      */
+/* =============================== */
+async function sendBlob(blob,filename){
+  load(true);
 
-  const form = new FormData();
-  form.append("file", blob, "upload_"+Date.now());
+  const fd=new FormData();
+  fd.append("file", blob, filename);
 
   try{
-    const res = await fetch(UPLOAD_URL, { method:"POST", body:form });
-    const json = await res.json();
-    setLoading(false);
+    const r=await fetch(UPLOAD_URL, {method:"POST",body:fd});
+    const txt=await r.text();
+    load(false);
 
-    if(json.ok) showToast("Guardado en Drive ✔");
-    else showToast("Error al subir ❌");
-
+    if(txt.includes("ok")) showToast("Guardado en Drive");
+    else showToast("Error al subir");
+    
   }catch(e){
-    setLoading(false);
-    showToast("Fallo conexión ❌");
+    load(false);
+    showToast("Error de conexión");
   }
 }
 </script>
