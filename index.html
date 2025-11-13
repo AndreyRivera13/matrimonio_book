@@ -289,13 +289,6 @@
                             <rect x="6" y="6" width="12" height="12" rx="2" />
                         </svg>
                     </button>
-                    <button class="btn btn--gold" id="galleryBtn">
-                        <svg width="26" height="26" fill="currentColor">
-                            <path d="M4 4h16v16H4z M8 14l2-3 3 4 4-6 3 5H8z" />
-                        </svg>
-                        <span>Galería</span>
-                    </button>
-
                 </div>
             </div>
         </div>
@@ -303,387 +296,122 @@
         <footer>Hecho con 💖 para nuestra boda</footer>
     </div>
 
-    <script>
+<script>
 
-        const UPLOAD_PHOTO_ENDPOINT = "https://script.google.com/macros/s/AKfycbwIb-1ysl9FZKMWaph38Ip3iCBWr7ByU_WWP2Eeffyq15ikRQB7d6wOT-Lz2PMH4sAS/exec";
-        const UPLOAD_VIDEO_ENDPOINT = "https://script.google.com/macros/s/AKfycbz2PwBywrCDCkbjDUxDX-l3lE0flRTMJNaBxJiVLMPYtm-7KhfKe1d3utNYtE3LHTNIfQ/exec";
+const UPLOAD_PHOTO_ENDPOINT = "https://script.google.com/macros/s/AKfycbwIb-1ysl9FZKMWaph38Ip3iCBWr7ByU_WWP2Eeffyq15ikRQB7d6wOT-Lz2PMH4sAS/exec";
+const UPLOAD_VIDEO_ENDPOINT = "https://script.google.com/macros/s/AKfycbz2PwBywrCDCkbjDUxDX-l3lE0flRTMJNaBxJiVLMPYtm-7KhfKe1d3utNYtE3LHTNIfQ/exec";
 
-        // Agregar input oculto para galería
-        const galleryInput = document.createElement("input");
-        galleryInput.type = "file";
-        galleryInput.accept = "image/*";
-        galleryInput.capture = false;
-        galleryInput.style.display = "none";
-        document.body.appendChild(galleryInput);
+// Agregar input oculto para galería
+const galleryInput = document.createElement("input");
+galleryInput.type = "file";
+galleryInput.accept = "image/*";
+galleryInput.capture = false;
+galleryInput.style.display = "none";
+document.body.appendChild(galleryInput);
 
-        let stream, mediaRecorder, chunks = [];
-        let torchSupported = false, torchOn = false;
-        let mimeChosen = "";
+let stream, mediaRecorder, chunks = [];
+let torchSupported = false, torchOn = false;
+let mimeChosen = "";
 
-        document.getElementById("galleryBtn")?.addEventListener("click", () => {
-            galleryInput.click();
-        });
+document.getElementById("galleryBtn")?.addEventListener("click", () => {
+    galleryInput.click();
+});
 
-        galleryInput.addEventListener("change", async (e) => {
-            if (!e.target.files.length) return;
-            const file = e.target.files[0];
-            const blob = file;
+galleryInput.addEventListener("change", async (e) => {
+    if (!e.target.files.length) return;
+    const file = e.target.files[0];
+    const blob = file;
 
-            showToast("Subiendo foto de galería...");
-            setLoading(true);
-
-            const ok = await uploadFile(blob, "galeria_" + Date.now() + ".png", UPLOAD_PHOTO_ENDPOINT);
-
-            setLoading(false);
-            showToast(ok ? "✅ Foto subida" : "❌ Error al subir");
-        });
-
-        async function uploadFile(blob, filename, endpoint) {
-            try {
-                const mimeType = blob.type;
-
-                // Convertir a base64
-                const base64 = await blobToBase64(blob);
-
-                const body = {
-                    filename,
-                    mimeType,
-                    base64
-                };
-
-                const res = await fetch(endpoint, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
-                });
-
-                if (!res.ok) return false;
-
-                const data = await res.json();
-                return data.ok === true;
-            } catch (err) {
-                console.error("Upload error:", err);
-                return false;
-            }
-        }
-
-        // --- FOTO DESDE LA CÁMARA ---
-        async function takePhoto() {
-            try {
-                setLoading(true);
-
-                const canvas = document.createElement("canvas");
-                drawCoverToCanvas(canvas, video);
-
-                const blob = await new Promise(r => canvas.toBlob(r, "image/png", 1.0));
-                const ok = await uploadFile(blob, "foto_" + Date.now() + ".png", UPLOAD_PHOTO_ENDPOINT);
-
-                setLoading(false);
-                showToast(ok ? "📸 Foto guardada" : "❌ Error al subir la foto");
-
-            } catch (e) {
-                setLoading(false);
-                showToast("❌ Error tomando foto");
-            }
-        }
-
-        // --- VIDEO ---
-        async function startRecording() {
-            chunks = [];
-            mediaRecorder = new MediaRecorder(stream, mimeChosen ? { mimeType: mimeChosen } : {});
-            mediaRecorder.ondataavailable = e => chunks.push(e.data);
-
-            mediaRecorder.onstop = async () => {
-                setLoading(true);
-                const blob = new Blob(chunks, { type: mimeChosen || "video/webm" });
-
-                const ext = blob.type.includes("mp4") ? "mp4" : "webm";
-                const ok = await uploadFile(blob, "video_" + Date.now() + "." + ext, UPLOAD_VIDEO_ENDPOINT);
-
-                setLoading(false);
-                showToast(ok ? "🎥 Video guardado" : "❌ Error subiendo video");
-            };
-
-            mediaRecorder.start();
-        }
-
-        // --- Base64 Helper ---
-        function blobToBase64(blob) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(",")[1]);
-                reader.readAsDataURL(blob);
-            });
-        }
-
-    </script>
-    // Pega aquí la URL de tu Apps Script
-    const UPLOAD_ENDPOINT =
-    'https://script.google.com/macros/s/AKfycbw7VsNoTgS85YUEHwtDPJTFS3LKsGF_3sd9Kv3TiWAmHJDhm8qzt7ZPBviTJJfms0B38Q/exec';
-
-    const video = document.getElementById('preview');
-    const statusEl = document.getElementById('status');
-    const toast = document.getElementById('toast');
-    const loader = document.getElementById('loader');
-    const photoBtn = document.getElementById('photoBtn');
-    const recBtn = document.getElementById('recBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const flashBtn = document.getElementById('flashBtn');
-
-    let stream, mediaRecorder, chunks = [];
-    let torchSupported = false, torchOn = false;
-    let mimeChosen = '';
-
-    function showToast(msg, ok = false) {
-    toast.textContent = msg;
-    toast.style.borderColor = ok ? 'rgba(70,212,107,0.5)' : 'rgba(255,184,77,0.4)';
-    toast.classList.add('toast--show');
-    setTimeout(() => toast.classList.remove('toast--show'), 1800);
-    }
-    function setLoading(isLoading) {
-    loader.classList.toggle('show', isLoading);
-    }
-    function setStatus(msg) { statusEl.textContent = msg; }
-
-    async function initCamera() {
-    try {
-    // Cámara trasera, vertical 9:16, sin audio
-    stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-    facingMode: { exact: 'environment' },
-    aspectRatio: 9 / 16,
-    width: { ideal: 1080 },
-    height: { ideal: 1920 },
-    focusMode: 'continuous'
-    },
-    audio: false
-    });
-    } catch (e) {
-    // Fallback sin exact si falla
-    stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-    facingMode: 'environment',
-    aspectRatio: 9 / 16,
-    width: { ideal: 1080 },
-    height: { ideal: 1920 }
-    },
-    audio: false
-    });
-    }
-
-    video.srcObject = stream;
-    video.muted = true;
-    video.playsInline = true;
-
-    // Torch / flash si el hardware lo permite (Chrome Android)
-    const [track] = stream.getVideoTracks();
-    const caps = track.getCapabilities ? track.getCapabilities() : {};
-    torchSupported = !!caps.torch;
-    flashBtn.style.opacity = torchSupported ? '1' : '.35';
-    flashBtn.title = torchSupported ? 'Flash' : 'Flash no soportado';
-    setStatus(`Cámara lista ${torchSupported ? '• flash OK' : ''}`);
-
-    // Elegir MIME para MediaRecorder intentando MP4 primero
-    if (window.MediaRecorder) {
-    const candidates = [
-    'video/mp4;codecs=h264',
-    'video/mp4',
-    'video/webm;codecs=h264',
-    'video/webm;codecs=vp9',
-    'video/webm;codecs=vp8',
-    'video/webm'
-    ];
-    mimeChosen = candidates.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
-    }
-    }
-
-    async function toggleTorch() {
-    if (!torchSupported || !stream) return;
-    try {
-    const [track] = stream.getVideoTracks();
-    torchOn = !torchOn;
-    await track.applyConstraints({ advanced: [{ torch: torchOn }] });
-    flashBtn.setAttribute('aria-pressed', torchOn ? 'true' : 'false');
-    showToast(torchOn ? 'Flash encendido' : 'Flash apagado', true);
-    } catch (e) {
-    showToast('No se pudo activar el flash');
-    }
-    }
-
-    function drawCoverToCanvas(canvas, video) {
-    // Canvas vertical 1080x1920
-    const W = 1080, H = 1920;
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
-    const vw = video.videoWidth, vh = video.videoHeight;
-    if (!vw || !vh) {
-    // si aún no está listo el video, reintenta
-    return false;
-    }
-    // Calcular escala para “cover”
-    const scale = Math.max(W / vw, H / vh);
-    const sw = vw * scale, sh = vh * scale;
-    const dx = (W - sw) / 2;
-    const dy = (H - sh) / 2;
-    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-    ctx.drawImage(video, dx, dy, sw, sh);
-    // Borde suave opcional
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-    ctx.lineWidth = 8;
-    ctx.strokeRect(4, 4, W - 8, H - 8);
-    return true;
-    }
-
-    async function takePhoto() {
-    try {
+    showToast("Subiendo foto de galería...");
     setLoading(true);
-    setStatus('Tomando foto…');
-    const canvas = document.createElement('canvas');
-    if (!drawCoverToCanvas(canvas, video)) {
-    await new Promise(r => setTimeout(r, 120));
-    drawCoverToCanvas(canvas, video);
-    }
-    const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1.0));
-    const fileName = `boda_foto_${Date.now()}.png`;
-    const ok = await uploadFile(blob, fileName, 'photo');
-    setLoading(false);
-    setStatus('Cámara lista');
-    showToast(ok ? '✅ Foto guardada en Drive' : 'No se pudo subir la foto', ok);
-    } catch (e) {
-    setLoading(false);
-    setStatus('Error al tomar foto');
-    showToast('Error al tomar o subir la foto');
-    }
-    }
 
-    async function startRecording() {
-    if (!stream) { showToast('Cámara no lista'); return; }
+    const ok = await uploadFile(blob, "galeria_"+Date.now()+".png", UPLOAD_PHOTO_ENDPOINT);
+
+    setLoading(false);
+    showToast(ok ? "✅ Foto subida" : "❌ Error al subir");
+});
+
+async function uploadFile(blob, filename, endpoint) {
     try {
+        const mimeType = blob.type;
+
+        // Convertir a base64
+        const base64 = await blobToBase64(blob);
+
+        const body = {
+            filename,
+            mimeType,
+            base64
+        };
+
+        const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        if (!res.ok) return false;
+
+        const data = await res.json();
+        return data.ok === true;
+    } catch (err) {
+        console.error("Upload error:", err);
+        return false;
+    }
+}
+
+// --- FOTO DESDE LA CÁMARA ---
+async function takePhoto() {
+    try {
+        setLoading(true);
+
+        const canvas = document.createElement("canvas");
+        drawCoverToCanvas(canvas, video);
+
+        const blob = await new Promise(r => canvas.toBlob(r, "image/png", 1.0));
+        const ok = await uploadFile(blob, "foto_"+Date.now()+".png", UPLOAD_PHOTO_ENDPOINT);
+
+        setLoading(false);
+        showToast(ok ? "📸 Foto guardada" : "❌ Error al subir la foto");
+
+    } catch(e) {
+        setLoading(false);
+        showToast("❌ Error tomando foto");
+    }
+}
+
+// --- VIDEO ---
+async function startRecording() {
     chunks = [];
-    const opts = mimeChosen ? { mimeType: mimeChosen } : undefined;
-    mediaRecorder = new MediaRecorder(stream, opts);
-    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
-    mediaRecorder.onstart = () => {
-    setStatus(`Grabando… ${mimeChosen || ''}`);
-    recBtn.style.display = 'none'; stopBtn.style.display = 'inline-flex';
-    };
+    mediaRecorder = new MediaRecorder(stream, mimeChosen ? { mimeType: mimeChosen } : {});
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+
     mediaRecorder.onstop = async () => {
-    setLoading(true);
-    const blob = new Blob(chunks, { type: mimeChosen || 'video/webm' });
-    const ext = (blob.type.includes('mp4')) ? 'mp4' : 'webm';
-    const fileName = `boda_video_${Date.now()}.${ext}`;
-    const ok = await uploadFile(blob, fileName, 'video');
-    setLoading(false);
-    setStatus('Cámara lista');
-    showToast(ok ? `✅ Video guardado (${ext.toUpperCase()})` : 'No se pudo subir el video', ok);
-    recBtn.style.display = 'inline-flex'; stopBtn.style.display = 'none';
-    };
-    // límite de seguridad 30s
-    mediaRecorder.start(1000);
-    setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording(); }, 30_000);
-    } catch (e) {
-    showToast('No se pudo iniciar la grabación');
-    }
-    }
-    function stopRecording() {
-    try {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
-    }
-    } catch { }
-    }
+        setLoading(true);
+        const blob = new Blob(chunks, { type: mimeChosen || "video/webm" });
 
-    async function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-    const dataUrl = reader.result; // "data:...;base64,XXXX"
-    const base64 = String(dataUrl).split(',')[1];
-    resolve(base64);
+        const ext = blob.type.includes("mp4") ? "mp4" : "webm";
+        const ok = await uploadFile(blob, "video_"+Date.now()+"."+ext, UPLOAD_VIDEO_ENDPOINT);
+
+        setLoading(false);
+        showToast(ok ? "🎥 Video guardado" : "❌ Error subiendo video");
     };
-    reader.onerror = (err) => reject(err);
-    reader.readAsDataURL(blob);
+
+    mediaRecorder.start();
+}
+
+// --- Base64 Helper ---
+function blobToBase64(blob) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.readAsDataURL(blob);
     });
-    }
+}
 
-    async function uploadFile(blob, filename, kind) {
-    try {
-    // Limpiar nombre y mime
-    const mimeType = blob.type || (kind === 'photo' ? 'image/png' : 'video/mp4');
+</script>
 
-    // Opcional: recortar/ajustar calidad si quieres reducir tamaño (solo fotos)
-    // -- aquí asumimos el blob es definitivo --
-
-    // Convertir a base64 (puede tardar para videos grandes)
-    setStatus('Convirtiendo archivo para subir…');
-    const base64 = await blobToBase64(blob);
-
-    const body = {
-    type: kind,
-    filename,
-    mimeType,
-    base64
-    };
-
-    // Timeout (60s). Ajusta si tu conexión es lenta
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60_000);
-
-    setStatus('Subiendo archivo…');
-    const res = await fetch(UPLOAD_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal: controller.signal
-    });
-    clearTimeout(timeout);
-
-    if (!res) {
-    console.error('Respuesta nula al subir');
-    return false;
-    }
-
-    if (!res.ok) {
-    // Intenta leer texto de error para debugging
-    let txt = '';
-    try { txt = await res.text(); } catch (_) { txt = '(no se pudo leer body)'; }
-    console.error('Error uploading:', res.status, txt);
-    return false;
-    }
-
-    // Intentar parsear JSON
-    try {
-    const data = await res.json();
-    if (!data || !data.ok) {
-    console.error('Respuesta del servidor no ok:', data);
-    return false;
-    }
-    console.log('Subida OK:', data);
-    return true;
-    } catch (err) {
-    // Respuesta opaca pero status OK -> considerar success
-    console.warn('No se pudo parsear JSON, pero status OK', err);
-    return true;
-    }
-    } catch (err) {
-    console.error('Error en uploadFile:', err);
-    if (err.name === 'AbortError') {
-    showToast('La subida tardó demasiado — intenta con videos más cortos o mejor conexión');
-    setStatus('Timeout subida');
-    }
-    return false;
-    }
-    }
-
-    // eventos
-    flashBtn.addEventListener('click', toggleTorch);
-    photoBtn.addEventListener('click', takePhoto);
-    recBtn.addEventListener('click', startRecording);
-    stopBtn.addEventListener('click', stopRecording);
-
-    // inicio
-    (async () => { await initCamera(); })();
-    </script>
+    
 </body>
 
 </html>
