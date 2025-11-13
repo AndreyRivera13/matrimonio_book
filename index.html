@@ -1,99 +1,95 @@
 <!doctype html>
 <html lang="es">
+
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nuestra Boda — Cámara</title>
 
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
-
 <style>
-/* ========== ESTILO ELEGANTE DE BODA ========== */
-:root { --bg1:#0e0e10; --bg2:#1b1b1f; --gold:#d4af37; --gold2:#f6e27a; }
-html,body { margin:0;height:100%;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#fff;font-family:Montserrat; }
-.wrap{position:fixed;inset:0;display:flex;flex-direction:column}
-header{text-align:center;padding:12px 0;font-family:Cinzel;font-size:22px}
-header span{background:linear-gradient(45deg,var(--gold),var(--gold2));-webkit-background-clip:text;color:transparent;}
-
-.videoBox{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-
-.frame{position:absolute;inset:0;margin:auto;aspect-ratio:9/16;width:min(100vw,56vh);
-border:2px solid rgba(255,255,255,0.18);border-radius:22px;box-shadow:0 0 0 999vmax rgba(0,0,0,0.25) inset;}
-
-.controls{position:absolute;bottom:22px;left:0;right:0;display:flex;flex-direction:column;gap:14px;align-items:center;}
-
-.row{display:flex;gap:16px;}
-
-.btn{
-  border:none;border-radius:999px;padding:16px;
-  background:rgba(0,0,0,0.55);color:#fff;backdrop-filter:blur(6px);
-  display:flex;align-items:center;justify-content:center;font-size:22px;
+/* --- ESTILOS --- */
+body{
+  margin:0;background:black;color:white;
+  font-family:Arial, sans-serif;height:100vh;overflow:hidden;
 }
-.btn-round{width:78px;height:78px}
-
-.toast{position:absolute;top:70px;left:50%;transform:translateX(-50%);
-background:rgba(0,0,0,0.6);padding:10px 14px;border-radius:12px;opacity:0;transition:.3s;}
-.toast.show{opacity:1;}
-
-.loader{position:absolute;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;font-size:26px;}
-.loader.show{display:flex;}
+#preview{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.controls{
+  position:absolute;bottom:20px;width:100%;display:flex;
+  flex-direction:column;align-items:center;gap:14px;
+}
+.row{display:flex;gap:12px}
+.btn{
+  background:rgba(0,0,0,0.55);border:none;color:white;
+  padding:16px;border-radius:50%;font-size:26px;
+}
+.btn-round{width:75px;height:75px}
+.toast{
+  position:absolute;top:30px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,0.7);padding:10px 16px;border-radius:8px;
+  opacity:0;transition:.3s;
+}
+.toast.show{opacity:1}
+.loader{
+  position:absolute;inset:0;background:rgba(0,0,0,0.4);
+  display:none;align-items:center;justify-content:center;font-size:32px;
+}
+.loader.show{display:flex}
+header{
+  position:absolute;top:10px;width:100%;text-align:center;
+  font-size:22px;font-weight:bold;
+}
 </style>
 </head>
 
 <body>
-<div class="wrap">
 
-<header><span>Andrey 💖 Yazmin — 22 Nov</span></header>
+<header>Andrey 💖 Yazmin — 22 Nov</header>
 
-<div class="videoBox">
-  <video id="preview" autoplay playsinline muted></video>
-  <div class="frame"></div>
+<video id="preview" autoplay playsinline muted></video>
 
-  <div class="loader" id="loader">⏳ Subiendo...</div>
-  <div class="toast" id="toast">Listo</div>
+<div class="loader" id="loader">⏳</div>
+<div class="toast" id="toast">Listo</div>
 
-  <div class="controls">
-    <div class="row">
-      <button class="btn" id="flashBtn">⚡</button>
-      <button class="btn" id="galleryBtn">📁</button>
-      <button class="btn" id="fsBtn">⛶</button>
-    </div>
-
-    <div class="row">
-      <button class="btn btn-round" id="photoBtn">📸</button>
-      <button class="btn btn-round" id="recBtn">🎥</button>
-      <button class="btn btn-round" id="stopBtn" style="display:none">⏹</button>
-    </div>
+<div class="controls">
+  <div class="row">
+    <button class="btn" id="flashBtn">⚡</button>
+    <button class="btn" id="galleryBtn">🖼️</button>
+    <button class="btn" id="fsBtn">⛶</button>
+  </div>
+  <div class="row">
+    <button class="btn btn-round" id="photoBtn">📸</button>
+    <button class="btn btn-round" id="recBtn">🎥</button>
+    <button class="btn btn-round" id="stopBtn" style="display:none">⏹</button>
   </div>
 </div>
 
 <script>
-/* TU URL DEL SCRIPT (SIN CORS, usa multipart/form-data) */
-const UPLOAD_URL = "https://script.google.com/macros/s/AKfycbwweym1n5yFrqZ8sFe2LA4956scyRb6UTJd8gWJpEkqMpCvnBwwrrMSaPasHxmrzS91/exec";
+/* =============================== */
+/*   CONFIGURA TU APPS SCRIPT      */
+/* =============================== */
+const UPLOAD_URL = "AQUÍ_TU_WEBAPP_URL";   // <<--- reemplaza esto
 
+/* =============================== */
 let stream, mediaRecorder, chunks=[];
-let torchOK=false, torch=false;
-
-/* UI */
-const toast=document.getElementById("toast");
-const loader=document.getElementById("loader");
+let torch=false, torchOK=false;
 
 function showToast(msg){
-  toast.textContent=msg;
-  toast.classList.add("show");
-  setTimeout(()=>toast.classList.remove("show"),1500);
+  const t=document.getElementById("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),1600);
 }
-function setLoading(b){ loader.classList.toggle("show",b); }
+function load(b){
+  document.getElementById("loader").classList.toggle("show",b);
+}
 
-/* ============================ */
-/*     INICIAR CÁMARA           */
-/* ============================ */
-(async function initCamera(){
+/* =============================== */
+/*  CÁMARA                         */
+/* =============================== */
+(async()=>{
   try{
     stream = await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:"environment",width:{ideal:1080},height:{ideal:1920}},
+      video:{facingMode:"environment"},
       audio:false
     });
 
@@ -102,72 +98,71 @@ function setLoading(b){ loader.classList.toggle("show",b); }
     torchOK = !!caps.torch;
 
     document.getElementById("preview").srcObject = stream;
-
-  }catch(e){ showToast("No se pudo abrir cámara"); }
+  }catch(e){
+    showToast("No se pudo abrir cámara");
+  }
 })();
 
-/* ============================ */
-/*      FLASH                   */
-/* ============================ */
-document.getElementById("flashBtn").onclick = async ()=>{
+/* =============================== */
+/* FLASH                           */
+/* =============================== */
+document.getElementById("flashBtn").onclick=async()=>{
   if(!torchOK) return showToast("Flash no soportado");
   torch=!torch;
   await stream.getVideoTracks()[0].applyConstraints({advanced:[{torch}]});
 };
 
-/* ============================ */
-/*    FULLSCREEN                */
-/* ============================ */
-document.getElementById("fsBtn").onclick = ()=>{
+/* =============================== */
+/* FULLSCREEN                      */
+/* =============================== */
+document.getElementById("fsBtn").onclick=()=>{
   if(!document.fullscreenElement) document.documentElement.requestFullscreen();
   else document.exitFullscreen();
 };
 
-/* ============================ */
-/*  INPUT GALERÍA (FOTOS)      */
-/* ============================ */
-const galleryInput=document.createElement("input");
-galleryInput.type="file";
-galleryInput.accept="image/*";
-galleryInput.style.display="none";
-document.body.appendChild(galleryInput);
+/* =============================== */
+/* GALERÍA                         */
+/* =============================== */
+const input=document.createElement("input");
+input.type="file";
+input.accept="image/*";
+input.style.display="none";
+document.body.appendChild(input);
 
-document.getElementById("galleryBtn").onclick = ()=> galleryInput.click();
+document.getElementById("galleryBtn").onclick=()=>input.click();
 
-galleryInput.onchange = e=>{
-  if(!e.target.files.length) return;
-  uploadFile(e.target.files[0]);
+input.onchange=(e)=>{
+  if(e.target.files.length) sendBlob(e.target.files[0], "galeria.jpg");
 };
 
-/* ============================ */
-/*        FOTO                  */
-/* ============================ */
-document.getElementById("photoBtn").onclick = ()=>{
-  const video=document.getElementById("preview");
-  const canvas=document.createElement("canvas");
-  canvas.width=1080; canvas.height=1920;
-  canvas.getContext("2d").drawImage(video,0,0,1080,1920);
-  canvas.toBlob(b=>uploadFile(b), "image/png");
+/* =============================== */
+/* FOTO                            */
+/* =============================== */
+document.getElementById("photoBtn").onclick=()=>{
+  const v=document.getElementById("preview");
+  const c=document.createElement("canvas");
+  c.width=1080;c.height=1920;
+  c.getContext("2d").drawImage(v,0,0,1080,1920);
+  c.toBlob(b=>sendBlob(b,"foto.png"),"image/png");
 };
 
-/* ============================ */
-/*        VIDEO                 */
-/* ============================ */
-document.getElementById("recBtn").onclick = ()=>{
+/* =============================== */
+/* VIDEO                           */
+/* =============================== */
+document.getElementById("recBtn").onclick=()=>{
   chunks=[];
-  mediaRecorder=new MediaRecorder(stream,{mimeType:"video/webm"});
+  mediaRecorder = new MediaRecorder(stream,{mimeType:"video/webm"});
   mediaRecorder.ondataavailable=e=>chunks.push(e.data);
   mediaRecorder.onstop=()=>{
     const blob=new Blob(chunks,{type:"video/webm"});
-    uploadFile(blob);
+    sendBlob(blob,"video.webm");
   };
   mediaRecorder.start();
-
   document.getElementById("recBtn").style.display="none";
   document.getElementById("stopBtn").style.display="inline-flex";
 };
 
-document.getElementById("stopBtn").onclick = ()=>{
+document.getElementById("stopBtn").onclick=()=>{
   mediaRecorder.stop();
   document.getElementById("recBtn").style.display="inline-flex";
   document.getElementById("stopBtn").style.display="none";
