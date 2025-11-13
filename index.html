@@ -2,291 +2,274 @@
 <html lang="es">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <title>Nuestra Boda — Cámara</title>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Montserrat:wght@500;700&display=swap"
-        rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Nuestra Boda — Cámara</title>
 
-    <style>
-        :root {
-            --bg1: #0e0e10;
-            --bg2: #1b1b1f;
-            --gold: #d4af37;
-            --gold-2: #f6e27a;
-            --btn-bg: rgba(0, 0, 0, 0.55);
-            --btn-fg: #fff;
-        }
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
-        html, body {
-            margin: 0;
-            height: 100%;
-            background: linear-gradient(160deg, var(--bg1), var(--bg2));
-            color: #fff;
-            font-family: Montserrat, system-ui;
-        }
+<style>
+/* --- ESTILOS DE BODA --- */
+:root{
+  --bg1:#0e0e10; --bg2:#1b1b1f;
+  --gold:#d4af37; --gold2:#f6e27a;
+}
+html,body{
+  margin:0;height:100%;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  color:#fff;font-family:Montserrat;
+}
+.wrap{position:fixed;inset:0;display:flex;flex-direction:column}
+header{text-align:center;padding:12px 0;font-family:Cinzel;font-size:22px}
+header span{
+  background:linear-gradient(45deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;color:transparent;
+}
 
-        .wrap {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-        }
+.videoBox{
+  flex:1;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
 
-        header {
-            text-align: center;
-            padding: 10px;
-            pointer-events: none;
-        }
+video{
+  position:absolute;inset:0;
+  width:100%;height:100%;object-fit:cover;
+}
 
-        header h1 {
-            margin: 0;
-            font-size: 22px;
-            font-family: Cinzel, serif;
-            background: linear-gradient(45deg, var(--gold), var(--gold-2));
-            -webkit-background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 12px rgba(212,175,55,.25);
-        }
+/* Marco tipo Instagram */
+.frame{
+  position:absolute;inset:0;margin:auto;
+  aspect-ratio:9/16;width:min(100vw,56vh);
+  border:2px solid rgba(255,255,255,0.18);
+  border-radius:22px;
+  box-shadow:0 0 0 999vmax rgba(0,0,0,0.25) inset;
+}
 
-        .videoBox {
-            position: relative;
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+/* Controles */
+.controls{
+  position:absolute;bottom:22px;left:0;right:0;
+  display:flex;flex-direction:column;gap:14px;
+  justify-content:center;align-items:center;
+}
+.row{display:flex;gap:16px}
 
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: #000;
-            position: absolute;
-        }
+.btn{
+  border:none;border-radius:999px;
+  padding:16px;background:rgba(0,0,0,0.55);
+  color:#fff;backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-round{width:78px;height:78px}
+.btn-gold{background:rgba(212,175,55,0.25)}
+.btn-green{background:rgba(70,212,107,0.28)}
+.btn-warn{background:rgba(255,184,77,0.28)}
 
-        .frame {
-            position: absolute;
-            inset: 0;
-            margin: auto;
-            aspect-ratio: 9/16;
-            width: min(100vw, 56.25vh);
-            border: 2px solid rgba(255,255,255,0.15);
-            border-radius: 22px;
-            box-shadow: 0 0 0 999vmax rgba(0,0,0,.25) inset;
-        }
+.toast{
+  position:absolute;top:70px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,0.6);padding:10px 14px;border-radius:12px;
+  opacity:0;transition:0.3s;
+}
+.toast.show{opacity:1}
 
-        .controls {
-            position: absolute;
-            bottom: 16px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn {
-            border: none;
-            background: var(--btn-bg);
-            color: var(--btn-fg);
-            border-radius: 50px;
-            padding: 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(6px);
-        }
-
-        .btn--round {
-            width: 70px;
-            height: 70px;
-        }
-
-        #fullscreenBtn {
-            position: absolute;
-            right: 12px;
-            top: 12px;
-            background: rgba(0,0,0,.45);
-        }
-
-        .toast {
-            position: absolute;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,.65);
-            padding: 10px 15px;
-            border-radius: 12px;
-            display: none;
-        }
-
-        .toast.show {
-            display: block;
-        }
-    </style>
+.loader{
+  position:absolute;inset:0;background:rgba(0,0,0,0.35);
+  display:none;align-items:center;justify-content:center;
+}
+.loader.show{display:flex}
+</style>
 </head>
 
 <body>
 <div class="wrap">
-    <header>
-        <h1>Andrey 💖 Yazmin • 22 Nov</h1>
-    </header>
 
-    <button id="fullscreenBtn" class="btn">
-        ⛶
-    </button>
+<header>
+  <span>Andrey 💖 Yazmin — 22 Nov</span>
+</header>
 
-    <div class="videoBox">
-        <video id="preview" playsinline autoplay muted></video>
-        <div class="frame"></div>
+<div class="videoBox">
+  <video id="preview" autoplay playsinline muted></video>
+  <div class="frame"></div>
+
+  <div class="loader" id="loader"><div style="font-size:20px">⏳</div></div>
+  <div class="toast" id="toast">Listo</div>
+
+  <div class="controls">
+    <div class="row">
+      <button class="btn btn-warn" id="flashBtn">⚡</button>
+      <button class="btn btn-warn" id="galleryBtn">📁</button>
+      <button class="btn btn-warn" id="fsBtn">⛶</button>
     </div>
 
-    <div class="controls">
-        <button class="btn" id="flashBtn">⚡</button>
-        <button class="btn btn--round" id="photoBtn">📸</button>
-        <button class="btn btn--round" id="recBtn">🎥</button>
-        <button class="btn btn--round" id="stopBtn" style="display:none;">⏹</button>
-        <button class="btn" id="galleryBtn">🖼️</button>
+    <div class="row">
+      <button class="btn btn-gold btn-round" id="photoBtn">📸</button>
+      <button class="btn btn-green btn-round" id="recBtn">🎥</button>
+      <button class="btn btn-warn btn-round" id="stopBtn" style="display:none">⏹</button>
     </div>
-
-    <div class="toast" id="toast">Listo</div>
+  </div>
 </div>
 
 <script>
+/* ============================ */
+/*   CONFIGURA TU SCRIPT AQUÍ   */
+/* ============================ */
+const UPLOAD_URL = "https://script.google.com/macros/s/AKfycby1XAbyod_cV3j8AFyfE3ai9Wx4xgfZokIzZagv27YL-ZHM2fxPFojDfOgbKqO1YDaC/exec";
 
-const UPLOAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZdBcimeBMiMm1u5DwubWKSybsDL1LS7xLY2pkutQYxArI8BKb2-fw93uM1XfpuLYQ/exec";
+/* ============================ */
+/*  VARIABLES GLOBALES         */
+/* ============================ */
+let stream, mediaRecorder, chunks=[];
+let torch=false, torchOK=false;
 
-const video = document.getElementById("preview");
-const flashBtn = document.getElementById("flashBtn");
-const photoBtn = document.getElementById("photoBtn");
-const recBtn = document.getElementById("recBtn");
-const stopBtn = document.getElementById("stopBtn");
-const galleryBtn = document.getElementById("galleryBtn");
-const fullscreenBtn = document.getElementById("fullscreenBtn");
-const toast = document.getElementById("toast");
+/* ============================ */
+/*      UTILIDADES UI          */
+/* ============================ */
+const toast=document.getElementById("toast");
+const loader=document.getElementById("loader");
 
-let stream, mediaRecorder, chunks = [];
-let torchSupported = false, torchOn = false;
-let mimeChosen = "";
-
-function showToast(msg) {
-    toast.textContent = msg;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2000);
+function showToast(msg){
+  toast.textContent=msg;
+  toast.classList.add("show");
+  setTimeout(()=>toast.classList.remove("show"),1600);
 }
+function setLoading(b){ loader.classList.toggle("show",b); }
 
-async function initCamera() {
+/* ============================ */
+/*      INICIAR CÁMARA         */
+/* ============================ */
+(async function initCamera(){
+  try{
     stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-            facingMode: "environment",
-            width: { ideal: 1080 },
-            height: { ideal: 1920 }
-        },
-        audio: false
+      video:{facingMode:"environment",width:{ideal:1080},height:{ideal:1920}},
+      audio:false
     });
 
-    video.srcObject = stream;
-
-    // TORCH
     const track = stream.getVideoTracks()[0];
     const caps = track.getCapabilities();
-    torchSupported = caps.torch || false;
-}
+    torchOK = !!caps.torch;
 
-initCamera();
+    document.getElementById("preview").srcObject = stream;
 
-// FULLSCREEN
-fullscreenBtn.onclick = () => {
-    document.documentElement.requestFullscreen();
+  }catch(err){
+    showToast("No se pudo abrir la cámara");
+  }
+})();
+
+/* ============================ */
+/*       FLASH / TORCH          */
+/* ============================ */
+document.getElementById("flashBtn").onclick=async()=>{
+  if(!torchOK) return showToast("Flash no soportado");
+  const track=stream.getVideoTracks()[0];
+  torch = !torch;
+  await track.applyConstraints({advanced:[{torch}]});
 };
 
-// FLASH
-flashBtn.onclick = async () => {
-    const track = stream.getVideoTracks()[0];
-    torchOn = !torchOn;
-    await track.applyConstraints({ advanced: [{ torch: torchOn }] });
-    showToast(torchOn ? "Flash encendido" : "Flash apagado");
+/* ============================ */
+/*       FULLSCREEN             */
+/* ============================ */
+document.getElementById("fsBtn").onclick=()=>{
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
 };
 
-// FOTO
-photoBtn.onclick = async () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1080;
-    canvas.height = 1920;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, 1080, 1920);
+/* ============================ */
+/*       GALERÍA INPUT          */
+/* ============================ */
+const galleryInput=document.createElement("input");
+galleryInput.type="file";
+galleryInput.accept="image/*";
+galleryInput.style.display="none";
+document.body.appendChild(galleryInput);
 
-    canvas.toBlob(async blob => {
-        await uploadFile(blob, "foto_" + Date.now() + ".png");
-    }, "image/png");
+document.getElementById("galleryBtn").onclick=()=> galleryInput.click();
+
+galleryInput.onchange=async(e)=>{
+  if(!e.target.files.length) return;
+  const file=e.target.files[0];
+  uploadBlob(file,file.name);
 };
 
-// VIDEO
-recBtn.onclick = () => {
-    chunks = [];
-    mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-    mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunks, { type: "video/webm" });
-        await uploadFile(blob, "video_" + Date.now() + ".webm");
-    };
-    mediaRecorder.start();
-    recBtn.style.display = "none";
-    stopBtn.style.display = "inline-flex";
+/* ============================ */
+/*       TOMAR FOTO             */
+/* ============================ */
+document.getElementById("photoBtn").onclick=async()=>{
+
+  const video=document.getElementById("preview");
+  const canvas=document.createElement("canvas");
+  canvas.width=1080; canvas.height=1920;
+  const ctx=canvas.getContext("2d");
+  ctx.drawImage(video,0,0,1080,1920);
+
+  canvas.toBlob(blob=>{
+    uploadBlob(blob,`foto_${Date.now()}.png`);
+  },"image/png");
 };
 
-stopBtn.onclick = () => {
-    mediaRecorder.stop();
-    stopBtn.style.display = "none";
-    recBtn.style.display = "inline-flex";
+/* ============================ */
+/*       GRABAR VIDEO           */
+/* ============================ */
+document.getElementById("recBtn").onclick=()=>{
+
+  chunks=[];
+  mediaRecorder=new MediaRecorder(stream,{mimeType:"video/webm"});
+  mediaRecorder.ondataavailable=e=>chunks.push(e.data);
+
+  mediaRecorder.onstop=()=>{
+    const blob=new Blob(chunks,{type:"video/webm"});
+    uploadBlob(blob,`video_${Date.now()}.webm`);
+  };
+
+  mediaRecorder.start();
+  document.getElementById("recBtn").style.display="none";
+  document.getElementById("stopBtn").style.display="inline-flex";
 };
 
-// GALERÍA
-const inputGallery = document.createElement("input");
-inputGallery.type = "file";
-inputGallery.accept = "image/*,video/*";
-inputGallery.style.display = "none";
-document.body.appendChild(inputGallery);
-
-galleryBtn.onclick = () => inputGallery.click();
-
-inputGallery.onchange = async e => {
-    if (!e.target.files.length) return;
-    const f = e.target.files[0];
-    await uploadFile(f, "galeria_" + Date.now());
+document.getElementById("stopBtn").onclick=()=>{
+  mediaRecorder.stop();
+  document.getElementById("recBtn").style.display="inline-flex";
+  document.getElementById("stopBtn").style.display="none";
 };
 
-// UPLOAD
-async function uploadFile(blob, filename) {
-    showToast("Subiendo…");
+/* ============================ */
+/*         SUBIR ARCHIVO        */
+/* ============================ */
+async function uploadBlob(blob,filename){
+  setLoading(true);
 
-    const base64 = await toBase64(blob);
+  const base64 = await blobToBase64(blob);
+  const body={
+    filename,
+    mimeType:blob.type,
+    base64
+  };
 
-    const res = await fetch(UPLOAD_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            filename,
-            mimeType: blob.type,
-            base64
-        })
+  try{
+    const res=await fetch(UPLOAD_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify(body)
     });
 
-    const data = await res.json();
-    showToast(data.ok ? "Guardado en Drive" : "Error al subir");
+    const json=await res.json();
+    setLoading(false);
+
+    if(json.ok) showToast("Guardado en Drive");
+    else showToast("Error al subir");
+    
+  }catch(err){
+    setLoading(false);
+    showToast("Fallo conexión");
+  }
 }
 
-function toBase64(blob) {
-    return new Promise(res => {
-        const r = new FileReader();
-        r.onload = () => res(r.result.split(",")[1]);
-        r.readAsDataURL(blob);
-    });
+function blobToBase64(blob){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(",")[1]);
+    r.readAsDataURL(blob);
+  });
 }
-
 </script>
 
 </body>
