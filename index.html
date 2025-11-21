@@ -237,7 +237,7 @@
             /* ============================ */
             /*   CONFIGURA TU SCRIPT AQUÍ   */
             /* ============================ */
-            const UPLOAD_URL = "https://script.google.com/macros/s/AKfycbzp3Is31NkC7AYvUXarD5qPKIBIndmL0E0-6VhH1z9-Ahp7tBjv7Sdbev_gW30x8uxJ6A/exec";
+            const UPLOAD_URL = "https://script.google.com/macros/s/AKfycby5oWsRtl0p-NLSRp67CQX7UrWMcZHKgTwuYdXSurqPtQsUNIRIdQPfOQ4gq6fD8ixDXQ/exec";
 
             /* ============================ */
             /*  VARIABLES GLOBALES         */
@@ -545,30 +545,32 @@
             async function uploadBlob(blob, filename) {
                 setLoading(true);
                 try {
-                    console.log("📤 Preparando subida rápida:", filename);
+                    console.log("📤 Subiendo:", filename, "Tamaño:", blob.size, "bytes", "Tipo:", blob.type);
 
-                    // 1. Pedir URL de subida
-                    const uploadUrl = await fetch(UPLOAD_URL).then(r => r.text());
+                    const fd = new FormData();
+                    fd.append("file", blob, filename); // 👈 campo "file" que Apps Script espera
 
-                    console.log("🔗 URL de subida obtenida:", uploadUrl);
-
-                    // 2. Subir archivo DIRECTO a Google Drive
-                    const res = await fetch(uploadUrl, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": blob.type || "application/octet-stream",
-                            "Content-Length": blob.size
-                        },
-                        body: blob
+                    const res = await fetch(UPLOAD_URL, {
+                        method: "POST",
+                        body: fd
                     });
 
-                    console.log("📡 Resultado subida:", res.status, res.statusText);
+                    const rawText = await res.text();
+                    console.log("📄 Respuesta completa:", rawText);
 
-                    if (res.ok) {
-                        showToast("✅ Guardado en Drive (rápido)");
+                    let data = {};
+                    try {
+                        data = JSON.parse(rawText);
+                    } catch (e) {
+                        console.warn("No es JSON válido, respuesta:", rawText);
+                    }
+
+                    if (data.ok) {
+                        showToast("✅ Guardado en Drive");
+                        console.log("🔗 URL:", data.url || "(sin URL)");
                     } else {
-                        showToast("❌ Error subiendo");
-                        console.error("Respuesta completa:", await res.text());
+                        showToast("❌ Error guardando en Drive");
+                        console.error("Respuesta no OK:", data || rawText);
                     }
 
                 } catch (err) {
