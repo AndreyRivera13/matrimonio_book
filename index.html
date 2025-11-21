@@ -315,9 +315,9 @@
                     stream = await navigator.mediaDevices.getUserMedia({
                         video: {
                             facingMode: { ideal: "environment" },
-                            width: { ideal: 3840 },  // 4K
-                            height: { ideal: 2160 }, // 4K
-                            frameRate: { ideal: 30 }
+                            width: { ideal: 1920 },  // 1080p
+                            height: { ideal: 1080 }, // 1080p
+                            frameRate: { ideal: 30, max: 30 }
                         },
                         audio: false
                     });
@@ -472,7 +472,7 @@
                     // Configurar para buena calidad sin afectar rendimiento
                     const options = {
                         mimeType: mimeType || undefined,
-                        videoBitsPerSecond: 2500000  // 2.5 Mbps = buena calidad sin lag
+                        videoBitsPerSecond: 1500000  // 1.5 Mbps = buena calidad sin lag
                     };
 
                     mediaRecorder = new MediaRecorder(stream, options);
