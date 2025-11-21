@@ -544,42 +544,40 @@
             /* ============================ */
             async function uploadBlob(blob, filename) {
                 setLoading(true);
+
                 try {
-                    console.log("📤 Subiendo:", filename, "Tamaño:", blob.size, "bytes", "Tipo:", blob.type);
-
                     const fd = new FormData();
-                    fd.append("file", blob, filename); // 👈 campo "file" que Apps Script espera
+                    fd.append("file", blob, filename);
 
-                    const res = await fetch(UPLOAD_URL, {
-                        method: "POST",
-                        body: fd
-                    });
+                    const PUBLIC_KEY = "d325b795c1558c042277";
 
-                    const rawText = await res.text();
-                    console.log("📄 Respuesta completa:", rawText);
+                    const res = await fetch(
+                        "https://upload.uploadcare.com/base/",
+                        {
+                            method: "POST",
+                            body: fd
+                        }
+                    );
 
-                    let data = {};
-                    try {
-                        data = JSON.parse(rawText);
-                    } catch (e) {
-                        console.warn("No es JSON válido, respuesta:", rawText);
-                    }
+                    const data = await res.json();
 
-                    if (data.ok) {
-                        showToast("✅ Guardado en Drive");
-                        console.log("🔗 URL:", data.url || "(sin URL)");
+                    if (data.file) {
+                        const fileUrl = `https://ucarecdn.com/${data.file}/`;
+                        showToast("📤 Subido!");
+                        console.log("URL pública:", fileUrl);
                     } else {
-                        showToast("❌ Error guardando en Drive");
-                        console.error("Respuesta no OK:", data || rawText);
+                        console.error(data);
+                        showToast("⚠️ Error al subir");
                     }
 
                 } catch (err) {
-                    console.error("💥 Error de conexión:", err);
+                    console.error(err);
                     showToast("⚠️ Error de conexión");
-                } finally {
-                    setLoading(false);
                 }
+
+                setLoading(false);
             }
+
         </script>
 
 </body>
