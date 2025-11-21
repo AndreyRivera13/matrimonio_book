@@ -494,8 +494,7 @@
                         }
                     };
 
-                    // Capturar en chunks más pequeños para evitar lag
-                    mediaRecorder.start(1000); // Capturar cada 1 segundo
+                    mediaRecorder.start();
 
                     // Límite máx 30s
                     recTimer = setTimeout(() => {
