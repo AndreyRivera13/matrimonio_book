@@ -431,35 +431,20 @@
             document.getElementById("photoBtn").onclick = async () => {
                 try {
                     const video = document.getElementById("preview");
-
-                    // Usar la resolución REAL del video para máxima calidad
                     const videoWidth = video.videoWidth || 1920;
                     const videoHeight = video.videoHeight || 1080;
-
-                    console.log("📸 Capturando foto:", videoWidth + "x" + videoHeight, "Zoom:", currentZoom.toFixed(1) + "x");
-
                     const canvas = document.createElement("canvas");
                     canvas.width = videoWidth;
                     canvas.height = videoHeight;
-
-                    // Sin alpha para mejor compresión
-                    const ctx = canvas.getContext("2d", {
-                        alpha: false,
-                        desynchronized: true
-                    });
-
-                    // Dibujar sin interpolación para máxima nitidez
+                    const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
                     ctx.imageSmoothingEnabled = false;
                     drawVideoCover(ctx, video, videoWidth, videoHeight);
-
-                    // JPEG con 98% de calidad (casi imperceptible vs PNG pero 5x más pequeño)
+                    // Cambia calidad a 0.92 (igual de buena, más rápida)
                     canvas.toBlob(blob => {
                         if (!blob) { showToast("No se pudo crear la foto"); return; }
-                        console.log("💾 Tamaño foto:", (blob.size / 1024 / 1024).toFixed(2) + " MB");
                         uploadBlob(blob, `foto_${Date.now()}.jpg`);
-                    }, "image/jpeg", 0.98);
+                    }, "image/jpeg", 0.92);
                 } catch (e) {
-                    console.error(e);
                     showToast("Error al capturar foto");
                 }
             };
@@ -545,65 +530,35 @@
             async function uploadBlob(blob, filename) {
                 setLoading(true);
                 try {
-                    console.log("📤 Subiendo:", filename, "Tamaño:", blob.size, "bytes", "Tipo:", blob.type);
-
-                    // Convertir blob a base64
                     const reader = new FileReader();
-                    const base64Promise = new Promise((resolve, reject) => {
-                        reader.onloadend = () => {
-                            const result = reader.result;
-                            const base64 = result.split(',')[1];
-                            resolve(base64);
-                        };
-                        reader.onerror = reject;
-                        reader.readAsDataURL(blob);
-                    });
-
-                    const base64Data = await base64Promise;
-
-                    // Enviar como JSON
-                    const payload = {
-                        filename: filename,
-                        mimeType: blob.type || "application/octet-stream",
-                        data: base64Data
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = async () => {
+                        const base64 = reader.result.split(',')[1];
+                        const payload = { filename, mimeType: blob.type, data: base64 };
+                        const res = await fetch(UPLOAD_URL, {
+                            method: "POST",
+                            body: JSON.stringify(payload)
+                        });
+                        const rawText = await res.text();
+                        let ok = false, url = "";
+                        // Solo parsea JSON si empieza con '{'
+                        if (rawText.trim()[0] === '{') {
+                            try {
+                                const data = JSON.parse(rawText);
+                                ok = !!data.ok;
+                                url = data.url || "";
+                            } catch (e) { /* fallback abajo */ }
+                        } else {
+                            ok = /"ok"\s*:\s*true/.test(rawText);
+                            const m = rawText.match(/"url"\s*:\s*"([^"]+)"/);
+                            url = m ? m[1] : "";
+                        }
+                        if (ok) showToast("✅ Guardado en Drive");
+                        else showToast("❌ Error guardando en Drive");
+                        setTimeout(() => setLoading(false), 400); // loader más breve
                     };
-
-                    const res = await fetch(UPLOAD_URL, {
-                        method: "POST",
-                        body: JSON.stringify(payload)
-                    });
-
-                    console.log("📡 Status HTTP:", res.status, res.statusText);
-
-                    const rawText = await res.text();
-                    console.log("📄 Respuesta completa:", rawText);
-
-                    let ok = false, url = "";
-
-                    try {
-                        const data = JSON.parse(rawText);
-                        ok = !!data.ok;
-                        url = data.url || "";
-                        console.log("✅ JSON parseado:", data);
-                    } catch (parseErr) {
-                        console.warn("⚠️ No es JSON válido, buscando patrones...");
-                        ok = /"ok"\s*:\s*true/.test(rawText);
-                        const m = rawText.match(/"url"\s*:\s*"([^"]+)"/);
-                        url = m ? m[1] : "";
-                    }
-
-                    if (ok) {
-                        showToast("✅ Guardado en Drive");
-                        console.log("🔗 URL:", url || "(sin URL)");
-                    } else {
-                        console.error("❌ Respuesta no OK. Texto completo:", rawText);
-                        showToast("❌ Error guardando en Drive");
-                    }
-
                 } catch (err) {
-                    console.error("💥 Error de conexión:", err);
                     showToast("⚠️ Error de conexión");
-                } finally {
                     setLoading(false);
                 }
             }
