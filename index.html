@@ -547,30 +547,57 @@
                 try {
                     console.log("📤 Subiendo:", filename, "Tamaño:", blob.size, "bytes", "Tipo:", blob.type);
 
-                    const fd = new FormData();
-                    fd.append("file", blob, filename); // 👈 campo "file" que Apps Script espera
+                    // Convertir blob a base64
+                    const reader = new FileReader();
+                    const base64Promise = new Promise((resolve, reject) => {
+                        reader.onloadend = () => {
+                            const result = reader.result;
+                            const base64 = result.split(',')[1];
+                            resolve(base64);
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+
+                    const base64Data = await base64Promise;
+
+                    // Enviar como JSON
+                    const payload = {
+                        filename: filename,
+                        mimeType: blob.type || "application/octet-stream",
+                        data: base64Data
+                    };
 
                     const res = await fetch(UPLOAD_URL, {
                         method: "POST",
-                        body: fd
+                        body: JSON.stringify(payload)
                     });
+
+                    console.log("📡 Status HTTP:", res.status, res.statusText);
 
                     const rawText = await res.text();
                     console.log("📄 Respuesta completa:", rawText);
 
-                    let data = {};
+                    let ok = false, url = "";
+
                     try {
-                        data = JSON.parse(rawText);
-                    } catch (e) {
-                        console.warn("No es JSON válido, respuesta:", rawText);
+                        const data = JSON.parse(rawText);
+                        ok = !!data.ok;
+                        url = data.url || "";
+                        console.log("✅ JSON parseado:", data);
+                    } catch (parseErr) {
+                        console.warn("⚠️ No es JSON válido, buscando patrones...");
+                        ok = /"ok"\s*:\s*true/.test(rawText);
+                        const m = rawText.match(/"url"\s*:\s*"([^"]+)"/);
+                        url = m ? m[1] : "";
                     }
 
-                    if (data.ok) {
+                    if (ok) {
                         showToast("✅ Guardado en Drive");
-                        console.log("🔗 URL:", data.url || "(sin URL)");
+                        console.log("🔗 URL:", url || "(sin URL)");
                     } else {
+                        console.error("❌ Respuesta no OK. Texto completo:", rawText);
                         showToast("❌ Error guardando en Drive");
-                        console.error("Respuesta no OK:", data || rawText);
                     }
 
                 } catch (err) {
