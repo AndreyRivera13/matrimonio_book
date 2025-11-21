@@ -237,7 +237,7 @@
             /* ============================ */
             /*   CONFIGURA TU SCRIPT AQUÍ   */
             /* ============================ */
-            const UPLOAD_URL = "https://script.google.com/macros/s/AKfycbxgOYKUzWZLiD0NJTpa__jNZyuDlIAEoE51K63EvZrx_rXc2Bx_x24KPv_TkapqlOxJNw/exec";
+            const UPLOAD_URL = "https://script.google.com/macros/s/AKfycbzwFzFGi4yV5Q6-yAyy1dYR_nNbvpV7Y2SSTIy_MBRdcDmeo2KtPZKtS4r5VCzWvqfr/exec";
 
             /* ============================ */
             /*  VARIABLES GLOBALES         */
@@ -544,40 +544,42 @@
             /* ============================ */
             async function uploadBlob(blob, filename) {
                 setLoading(true);
-
                 try {
+                    console.log("📤 Subiendo:", filename, "Tamaño:", blob.size, "bytes", "Tipo:", blob.type);
+
                     const fd = new FormData();
-                    fd.append("file", blob, filename);
+                    fd.append("file", blob, filename); // 👈 campo "file" que Apps Script espera
 
-                    const PUBLIC_KEY = "d325b795c1558c042277";
+                    const res = await fetch(UPLOAD_URL, {
+                        method: "POST",
+                        body: fd
+                    });
 
-                    const res = await fetch(
-                        "https://upload.uploadcare.com/base/",
-                        {
-                            method: "POST",
-                            body: fd
-                        }
-                    );
+                    const rawText = await res.text();
+                    console.log("📄 Respuesta completa:", rawText);
 
-                    const data = await res.json();
+                    let data = {};
+                    try {
+                        data = JSON.parse(rawText);
+                    } catch (e) {
+                        console.warn("No es JSON válido, respuesta:", rawText);
+                    }
 
-                    if (data.file) {
-                        const fileUrl = `https://ucarecdn.com/${data.file}/`;
-                        showToast("📤 Subido!");
-                        console.log("URL pública:", fileUrl);
+                    if (data.ok) {
+                        showToast("✅ Guardado en Drive");
+                        console.log("🔗 URL:", data.url || "(sin URL)");
                     } else {
-                        console.error(data);
-                        showToast("⚠️ Error al subir");
+                        showToast("❌ Error guardando en Drive");
+                        console.error("Respuesta no OK:", data || rawText);
                     }
 
                 } catch (err) {
-                    console.error(err);
+                    console.error("💥 Error de conexión:", err);
                     showToast("⚠️ Error de conexión");
+                } finally {
+                    setLoading(false);
                 }
-
-                setLoading(false);
             }
-
         </script>
 
 </body>
